@@ -1,0 +1,23 @@
+{
+  "name": "opencode-superpowers-audit",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "main": "./index.js",
+  "exports": "./index.js",
+  "scripts": {
+    "test": "bun test tests/options.test.ts tests/skill.test.ts tests/superpowers.test.ts tests/integration.test.ts tests/command.test.ts tests/plugin.test.ts",
+    "test:package": "bun test tests/package.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "files": ["index.js", "src", "skills", "README.md", "DESIGN.md", "LICENSE", "NOTICE"],
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@opencode/plugin": "^2.0.14",
+    "@types/bun": "^1.4.2",
+    "@types/json-schema": "^7.0.15",
+    "typescript": "^7.0.2"
+  }
+}
