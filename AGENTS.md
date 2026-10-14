@@ -62,6 +62,9 @@ optional and must resolve to that external directory if used.
   receive bodies, not filesystem skill files. Preserve upstream MIT attribution.
 - Update diagrams and scripted handoffs alongside surrounding prose. Human-requested
   changes require renewed self-review and a fresh audit in both authoring skills.
+- Preserve the upstream skill path when adapting content. Superpowers 7.0.0's
+  builder check resolves `builder-check-prompt.md` relative to that directory;
+  it remains a separate stage before writer self-review and the audit.
 - Check replay and disposal as well as initial registration. Native `editor.add`
   replaces an existing skill ID, including across transforms; the registry double
   models ordered replay and host-owned disposal, not auditor execution.

@@ -7,71 +7,61 @@ export interface SkillAdaptation {
   reason?: string;
 }
 
-// Full bodies live only in attributed tests. Only CRLF is normalized for matching.
+// Superpowers 7.0.0 bodies live only in attributed tests. Normalize only CRLF.
 export const supportedHashes: Record<SupportedSkill, { baseline: string; transformed: string }> = {
   brainstorming: {
-    baseline: '573348866df4a1741c7a92e7e54fcbbaf61eac7fd306c6645297682736886714',
-    transformed: 'e619af3d7a806ec3542b1eccc70821bb43ccb491a6e961cd6059c48ab04797cb',
+    baseline: '7066acbd55d8507328effff41bcf611eafca117c5bd7b9ac7fa545096132533a',
+    transformed: '2711571587d306948e5493f51ec749a7edfc2afd459a1856a417543662d018ff',
   },
   'writing-plans': {
-    baseline: 'db6d58557ba4d445b49755705bfa2f81650fa6ea34531f5da283d688d62e8bd8',
-    transformed: 'de25b9d6438e2528bde8c33c57de62fecb81f5bc3f3acb54f5b23156d7331a58',
+    baseline: '1fa01b954171b1d2b8bc0208dfbc6a01edf8a2ca715d18f76f043952e37e744f',
+    transformed: '939170c197e7f7ad6603dd837caa2513b2e2c0b83dfe447fef56d89d6c47eb38',
   },
 };
 
 const edits: Record<SupportedSkill, readonly (readonly [string, string])[]> = {
   brainstorming: [
     [
-      '8. **User reviews written spec** — ask user to review the spec file before proceeding',
-      '8. **Adversarial review** — load the native `superpowers-audit` skill and complete it in this writer session.\n'
-        + '9. **User reviews written spec** — ask user to review the spec file and audit report before proceeding',
+      'until the check is back. Sort what the builder asks into three piles:',
+      'until the builder check, self-review, and audit are complete. Sort what the builder asks into three piles:',
     ],
     [
-      '9. **Transition to implementation** — invoke writing-plans skill to create implementation plan',
-      '10. **Transition to implementation** — invoke writing-plans skill to create implementation plan',
+      'document with their answers, then hand it over with a short list of the\n'
+        + "calls you made so they can check those while reading. That's the only\n"
+        + 'round of questions the check produces. Without a subagent tool, read the\n'
+        + 'document as that builder yourself.',
+      'document with their answers, then complete self-review and adversarial review\n'
+        + 'before human handoff. That is the only round of questions the builder check produces.\n'
+        + 'Without a subagent tool, read the document as that builder yourself.',
     ],
     [
-      '    "Spec self-review\\n(fix inline)" [shape=box];',
-      '    "Spec self-review\\n(fix inline)" [shape=box];\n    "Adversarial review" [shape=box];',
+      '<HARD-GATE>',
+      '## Spec Self-Review\n\n'
+        + 'For a written project design, after resolving the builder check, review the\n'
+        + 'current document yourself for placeholders, contradictions, scope, and ambiguity.\n'
+        + "Fix issues inline; preserve the human's decisions and label your own calls.\n"
+        + 'Then complete Adversarial Review before handing over the document.\n\n'
+        + '## Adversarial Review\n\n'
+        + 'Load the native `superpowers-audit` skill after spec self-review. Supply the\n'
+        + 'written design, agreed brief/decisions, and known drafting models; remain in this\n'
+        + 'writer session. Complete its discussion and report before human handoff.\n'
+        + 'Present a non-approved result and ask for direction; preserve the actual result\n'
+        + 'if the human proceeds. Audit questions about material decisions still go to the human;\n'
+        + "the builder check's one question round does not waive that requirement.\n\n"
+        + '## Human Document Review\n\n'
+        + 'Hand over the current design and audit report, state the actual outcome, and\n'
+        + 'include a short list of calls you made so the human can check those while reading:\n\n'
+        + '> "Spec: `<spec path>`. Audit: <actual outcome>; report: `<report path>`. My calls: <short list>. Please review the full document and report. Do you approve this design for planning?"\n\n'
+        + "Wait for the human's decision. After direct human edits or changes they request,\n"
+        + 'rerun self-review and a fresh audit before renewed handoff. Only proceed to\n'
+        + 'planning once the human approves the current written design.\n\n'
+        + '<HARD-GATE>',
     ],
     [
-      '    "Spec self-review\\n(fix inline)" -> "User reviews spec?";',
-      '    "Spec self-review\\n(fix inline)" -> "Adversarial review";\n'
-        + '    "Adversarial review" -> "User reviews spec?";',
-    ],
-    [
-      'Architectural: the ONLY skill you\ninvoke after brainstorming is writing-plans',
-      'Architectural: run superpowers-audit after spec self-review, then invoke\n'
-        + 'writing-plans after the human approves the written spec',
-    ],
-    [
-      'Fix any issues inline. No need to re-review — just fix and move on.',
-      'Fix self-review issues inline, then complete the Adversarial Review stage below.',
-    ],
-    [
-      '**User Review Gate:**',
-      '**Adversarial Review:**\n'
-        + 'Load the native `superpowers-audit` skill after self-review. Supply the written spec,\n'
-        + 'agreed brief/decisions, and known drafting models; remain in this writer session.\n'
-        + 'Complete its discussion and report before human handoff. Present a non-approved\n'
-        + 'result and ask for direction; preserve the actual result if the human proceeds.\n\n'
-        + '**User Review Gate:**',
-    ],
-    [
-      'After the spec review loop passes, ask the user to review the written spec before proceeding:',
-      "After self-review and adversarial review, present the current spec, audit outcome, and report for the human's decision before proceeding:",
-    ],
-    [
-      '> "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we start writing out the implementation plan."',
-      '> "Spec: <path>. Audit: <actual outcome>; report: <report path>. Please review these before we start writing the implementation plan."',
-    ],
-    [
-      '- Do NOT invoke any other skill. writing-plans is the next step.',
-      '- After the audit and human spec approval, writing-plans is the next step; do not start implementation.',
-    ],
-    [
-      "Wait for the user's response. If they request changes, make them and re-run the spec review loop. Only proceed once the user approves.",
-      "Wait for the user's response. After direct human edits or changes they request, re-run self-review and a fresh audit before renewed handoff. Only proceed once the user approves.",
+      "After a project's document is approved, the next step is the plan. For\n"
+        + 'software, invoke superpowers:writing-plans and no other skill.',
+      "After a project's builder check, self-review, audit, and human document approval,\n"
+        + 'the next step is the plan. For software, invoke superpowers:writing-plans and no other skill.',
     ],
   ],
   'writing-plans': [

@@ -42,6 +42,13 @@ loading after self-review and before human handoff, including scripted handoffs
 and renewed review after human edits. Registration order matters: the source
 skills must already be visible, and a later plugin can replace them.
 
+The supported baseline is Superpowers 7.0.0. Its brainstorming builder check
+remains a separate upstream stage: resolve it, self-review the written design,
+then audit before human approval. The builder check's one question round does
+not limit material decision questions from an audit. Only written designs get
+these document stages; upstream quick-task, opt-out, small-change, and spike
+routes stay unchanged. Human edits require renewed self-review and a fresh audit.
+
 Whole-body input and output hashes are deliberate compatibility boundaries.
 Matching isolated headings or fragments could silently drop upstream requirements.
 Only CRLF normalization is allowed when matching; unknown definitions retain

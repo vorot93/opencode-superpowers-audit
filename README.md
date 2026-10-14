@@ -2,9 +2,13 @@
 
 Independent review of specifications and implementation plans in OpenCode v2.
 The plugin adds `/audit`, a shared audit skill, and automatic audit stages for
-Superpowers **6.4.1** brainstorming and writing-plans skills.
+Superpowers **7.0.0** brainstorming and writing-plans skills.
 
 > Write → self-review → independent audit → human document review.
+
+For written designs, Superpowers' builder check comes before writer self-review.
+Quick tasks, small in-chat changes, question opt-outs, and throwaway spikes keep
+their upstream paths; automatic document auditing does not add gates to them.
 
 The existing writer discusses findings with an auditor, verifies claims, applies
 justified corrections, and saves a Markdown report. Material design changes go to
@@ -27,6 +31,10 @@ Add the plugin to `opencode.json(c)` **after Superpowers**:
 The package loads TypeScript directly through OpenCode's Bun runtime; installation
 requires no compilation. GitHub installation and native registration are verified
 on OpenCode **2.0.15**.
+
+Superpowers 7.0.0 integration is also registry-verified on OpenCode **2.0.28**
+using a production-only tarball, complete body comparisons, and three reloads.
+This no-model check does not establish end-to-end writer/auditor behavior.
 
 For a local checkout, run `bun install --production` and replace the GitHub target
 with its absolute package directory. Configure the directory rather than an
@@ -92,7 +100,8 @@ rather than silently activating defaults.
 
 ## Integration and limits
 
-Automatic integration recognizes the exact supported Superpowers skill bodies.
+Automatic integration recognizes the exact Superpowers 7.0.0 skill bodies, not
+just a package version. Older versions are not adapted.
 Changed or customized definitions retain their content with an **Audit integration
 unavailable** notice; missing skills stay absent. Check plugin order and the status
 in the shared audit skill when integration is unavailable. Installed Superpowers
@@ -132,4 +141,4 @@ See [AGENTS.md](AGENTS.md) for maintenance and verification conventions and
 
 This project is licensed under [Apache-2.0](LICENSE). Superpowers instruction
 excerpts and fixtures are derived from Jesse Vincent's MIT-licensed Superpowers.
-See [NOTICE](NOTICE) and the [fixture attribution](tests/fixtures/superpowers-6.4.1/README.md).
+See [NOTICE](NOTICE) and the [fixture attribution](tests/fixtures/superpowers-7.0.0/README.md).

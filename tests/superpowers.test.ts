@@ -24,7 +24,8 @@ for (const id of skillIDs) {
     ['audit words', 'This body mentions superpowers-audit but is not supported.\n'],
     ['marker only', `<!-- opencode-superpowers-audit:unavailable:${id} -->\n${body}`],
     ['unknown CRLF', '# Local workflow\r\nKeep these bytes.\r\n'],
-    ['one changed sentence', body.replace('## Overview', '## Local overview').replace('Help turn ideas', 'Help turn local ideas')],
+    ['one changed sentence', body.replace('You are very good at building.', 'You are very good at local building.')
+      .replace('## Overview', '## Local overview')],
   ]) {
     test(`${id}: ${name} stays incompatible with original bytes below one notice`, () => {
       const notice = `<!-- opencode-superpowers-audit:unavailable:${id} -->\n`
@@ -58,10 +59,33 @@ for (const id of skillIDs) {
 test('transformed handoffs include actual outcomes, reports, and renewed review after human edits', () => {
   const spec = adaptSkill('brainstorming', fixture('brainstorming')).content;
   const plan = adaptSkill('writing-plans', fixture('writing-plans')).content;
-  expect(spec).toContain('Spec: <path>. Audit: <actual outcome>; report: <report path>.');
-  expect(spec).toContain('re-run self-review and a fresh audit before renewed handoff');
+  expect(spec).toContain('Spec: `<spec path>`. Audit: <actual outcome>; report: `<report path>`.');
+  expect(spec).toContain('rerun self-review and a fresh audit before renewed handoff');
   expect(plan).toContain('rerun self-review and\nstart a fresh audit before renewed handoff');
   for (const ending of ['Which execution approach would you prefer?**', 'Does the plan capture what you want?"**']) {
     expect(plan).toContain('**"Plan: `<plan path>`. Audit: <actual outcome>; report: `<report path>`. Please review both. ' + ending);
   }
+});
+
+test('written designs preserve the builder check before writer review and audit', () => {
+  const content = adaptSkill('brainstorming', fixture('brainstorming')).content;
+  const builder = content.indexOf('**Builder check:**');
+  const selfReview = content.indexOf('## Spec Self-Review');
+  const audit = content.indexOf('## Adversarial Review');
+  const handoff = content.indexOf('## Human Document Review');
+  expect(builder).toBeGreaterThan(0);
+  expect(selfReview).toBeGreaterThan(builder);
+  expect(audit).toBeGreaterThan(selfReview);
+  expect(handoff).toBeGreaterThan(audit);
+  expect(content).toContain('`builder-check-prompt.md` in this directory');
+  expect(content).toContain('That is the only round of questions the builder check produces.');
+});
+
+test('automatic review does not alter v7 quick-task, opt-out, small-change, or spike routes', () => {
+  const original = fixture('brainstorming');
+  const content = adaptSkill('brainstorming', original).content;
+  const designStart = original.indexOf('## The Written Design');
+  expect(content.slice(0, designStart)).toBe(original.slice(0, designStart));
+  const exceptions = original.slice(original.indexOf('<HARD-GATE>'), original.indexOf('After a project\'s document'));
+  expect(content).toContain(exceptions);
 });

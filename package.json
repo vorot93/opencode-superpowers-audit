@@ -12,11 +12,11 @@
   },
   "files": ["index.js", "src", "skills", "README.md", "DESIGN.md", "LICENSE", "NOTICE"],
   "dependencies": {
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@opencode/plugin": "^2.0.14",
-    "@types/bun": "^1.4.2",
+    "@opencode/plugin": "^2.0.28",
+    "@types/bun": "^1.4.3",
     "@types/json-schema": "^7.0.15",
     "typescript": "^7.0.2"
   }

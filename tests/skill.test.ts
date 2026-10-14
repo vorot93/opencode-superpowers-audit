@@ -97,7 +97,7 @@ for (const [name, reviewers] of [
 }
 
 // These full-text snapshots review the rendered artifact, not model obedience.
-// Native pressure scenarios are owned by the controller/Task 3.
+// Native pressure scenarios require separate controller-owned verification.
 for (const [name, input] of [
   ['default', {}],
   ['custom', {

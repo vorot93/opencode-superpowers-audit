@@ -57,7 +57,7 @@ test('registers golden skills and one native command using only transforms and p
 });
 
 test('a changed sentence preserves the unknown definition and reports incompatibility', async () => {
-  const changed = fixture('brainstorming').replace('Help turn ideas', 'Help turn local ideas');
+  const changed = fixture('brainstorming').replace('You are very good at building.', 'You are very good at local building.');
   const host = registry([skillInfo('brainstorming', changed), skillInfo('writing-plans', fixture('writing-plans'))]);
   const result = await loaded(host);
   const content = host.skills.get('brainstorming')!.content;
