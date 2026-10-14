@@ -93,9 +93,12 @@ bun build tests/native/check-plugin.ts --target bun --outfile <directory>/index.
 Give that directory a `package.json` with `"type": "module"` and
 `"main": "./index.js"`. Set `AUDIT_CHECK_OUTPUT` and `AUDIT_CHECK_EXPECTATIONS` to
 external JSON paths. Expectations contain `bodies` (skill IDs mapped to full expected
-text, or null for absence) and `statuses` (expected lines in the shared skill).
+text, or null for absence), `paths` (the same IDs mapped to independently supplied
+exact native skill paths, or null for absence), and `statuses` (expected lines in
+the shared skill). Pin upstream paths, not just relative helper availability:
+the builder prompt resolves relative to the preserved brainstorming skill path.
 Remove any old result before launching so a skipped checker cannot pass on stale
-evidence. Require fresh `ok: true` output; the checker compares complete bodies and
+evidence. Require fresh `ok: true` output; the checker compares complete bodies, paths, and
 three skill/command reloads. A missing shared asset instead requires a visible load
 error and no successful checker result.
 

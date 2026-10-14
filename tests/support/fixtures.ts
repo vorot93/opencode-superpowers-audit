@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import type { SupportedSkill } from '../../src/skill.js';
 
@@ -10,4 +11,17 @@ export function fixture(id: SupportedSkill): string {
 
 export function expected(id: SupportedSkill): string {
   return readFileSync(new URL(`../expected/${id}.md`, import.meta.url), 'utf8');
+}
+
+const sentenceMutations: Record<SupportedSkill, readonly [string, string]> = {
+  brainstorming: ['You are very good at building.', 'You are very good at local building.'],
+  'writing-plans': ['## Overview', '## Local overview'],
+};
+
+export function mutateSentence(id: SupportedSkill, body: string): string {
+  const [from, to] = sentenceMutations[id];
+  const first = body.indexOf(from);
+  assert(first >= 0 && body.indexOf(from, first + from.length) < 0,
+    `${id}: mutation anchor must occur exactly once`);
+  return body.replace(from, to);
 }

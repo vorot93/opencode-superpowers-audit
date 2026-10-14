@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { CommandInvocation } from '@opencode/plugin/promise/command';
 import plugin from '../src/index.js';
-import { expected, fixture, skillIDs } from './support/fixtures.js';
+import { expected, fixture, mutateSentence, skillIDs } from './support/fixtures.js';
 import { pluginContext, registry, skillInfo, sourceSkills } from './support/registry.js';
 import { promptRecorder } from './support/session.js';
 
@@ -57,7 +57,7 @@ test('registers golden skills and one native command using only transforms and p
 });
 
 test('a changed sentence preserves the unknown definition and reports incompatibility', async () => {
-  const changed = fixture('brainstorming').replace('You are very good at building.', 'You are very good at local building.');
+  const changed = mutateSentence('brainstorming', fixture('brainstorming'));
   const host = registry([skillInfo('brainstorming', changed), skillInfo('writing-plans', fixture('writing-plans'))]);
   const result = await loaded(host);
   const content = host.skills.get('brainstorming')!.content;

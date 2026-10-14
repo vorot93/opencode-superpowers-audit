@@ -1,9 +1,20 @@
 import { expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
 import { adaptSkill, supportedHashes, withIntegrationNotice } from '../src/superpowers.js';
-import { expected, fixture, skillIDs } from './support/fixtures.js';
+import { expected, fixture, mutateSentence, skillIDs } from './support/fixtures.js';
 
 const hash = (text: string) => createHash('sha256').update(text).digest('hex');
+
+for (const [id, from, to] of [
+  ['brainstorming', 'You are very good at building.', 'You are very good at local building.'],
+  ['writing-plans', '## Overview', '## Local overview'],
+] as const) {
+  test(`${id}: intentional mutation changes exactly one known sentence`, () => {
+    expect(mutateSentence(id, fixture(id))).toBe(fixture(id).replace(from, to));
+    expect(() => mutateSentence(id, 'Unrelated body.')).toThrow(`${id}: mutation anchor must occur exactly once`);
+    expect(() => mutateSentence(id, `${from}\n${from}`)).toThrow(`${id}: mutation anchor must occur exactly once`);
+  });
+}
 
 for (const id of skillIDs) {
   const body = fixture(id);
@@ -24,8 +35,7 @@ for (const id of skillIDs) {
     ['audit words', 'This body mentions superpowers-audit but is not supported.\n'],
     ['marker only', `<!-- opencode-superpowers-audit:unavailable:${id} -->\n${body}`],
     ['unknown CRLF', '# Local workflow\r\nKeep these bytes.\r\n'],
-    ['one changed sentence', body.replace('You are very good at building.', 'You are very good at local building.')
-      .replace('## Overview', '## Local overview')],
+    ['one changed sentence', mutateSentence(id, body)],
   ]) {
     test(`${id}: ${name} stays incompatible with original bytes below one notice`, () => {
       const notice = `<!-- opencode-superpowers-audit:unavailable:${id} -->\n`
@@ -85,8 +95,14 @@ test('automatic review does not alter v7 quick-task, opt-out, small-change, or s
   const original = fixture('brainstorming');
   const content = adaptSkill('brainstorming', original).content;
   const designStart = original.indexOf('## The Written Design');
+  const gateStart = original.indexOf('<HARD-GATE>');
+  const gateEnd = original.indexOf('After a project\'s document');
+  expect(designStart).toBeGreaterThanOrEqual(0);
+  expect(gateStart).toBeGreaterThanOrEqual(0);
+  expect(gateEnd).toBeGreaterThanOrEqual(0);
+  expect(gateEnd).toBeGreaterThan(gateStart);
   expect(content.slice(0, designStart)).toBe(original.slice(0, designStart));
-  const exceptions = original.slice(original.indexOf('<HARD-GATE>'), original.indexOf('After a project\'s document'));
+  const exceptions = original.slice(gateStart, gateEnd);
   expect(content).toContain(exceptions);
 });
 
