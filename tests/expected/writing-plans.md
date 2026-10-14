@@ -170,19 +170,19 @@ After writing the complete plan, look at the spec with fresh eyes and check the 
 
 **5. Proportion:** Compare the plan's length to the spec's. A plan several times longer than the spec it implements is a transcript of the program, not a plan. If code blocks are most of the document, replace bodies with signatures, test names and assertions, and check that each step is still unambiguous.
 
-If you find issues, fix them inline. Then complete the Adversarial Review stage below. If you find a spec requirement with no task, add the task.
+If you find issues, fix them inline. If you find a spec requirement with no task, add the task. Then complete the Adversarial Review stage below.
 
 ## Adversarial Review
 
 After completing self-review, load the native `superpowers-audit` skill. Supply
-the plan, approved governing spec/amendments, relevant decisions, and known authors.
+the plan, approved governing spec/amendments, relevant decisions, and known drafting models.
 Run its conversation in this writer session and write its report before handoff.
 Present the actual outcome and ask for direction when it is not Approved.
 
 ## Execution Handoff
 
-After direct human edits or changes requested during review, rerun self-review and
-start a fresh audit before renewed handoff. Preserve an already selected execution
+After handoff, direct human edits or changes they request receive self-review and
+a fresh audit before renewed handoff. Preserve an already selected execution
 method and wait for approval of the revised plan.
 
 After saving, self-reviewing, and auditing the plan, link the current plan

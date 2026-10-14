@@ -156,8 +156,9 @@ Otherwise, ask. Your human partner's preferences override both.
 **Builder check:** dispatch a fresh subagent with
 `builder-check-prompt.md` in this directory. When you tell your human
 partner you're writing it up, say a reviewer will read it first and you
-may come back once with a few questions. Don't hand over the document
-until the builder check, self-review, and audit are complete. Sort what the builder asks into three piles:
+may come back once with builder questions; additional audit questions are possible.
+Don't hand over the document until the builder check, self-review, and audit
+are complete. Sort what the builder asks into three piles:
 
 - **Answered already** by the conversation or the project: put the answer
   in the document.
@@ -180,21 +181,23 @@ Then complete Adversarial Review before handing over the document.
 
 ## Adversarial Review
 
-Load the native `superpowers-audit` skill after spec self-review. Supply the
-written design, agreed brief/decisions, and known drafting models; remain in this
-writer session. Complete its discussion and report before human handoff.
+For a written project design, load the native `superpowers-audit` skill after
+spec self-review. Supply the written design, confirmed conversational intent/decisions and human answers
+(in a brief if available), and known drafting models; remain in this writer session.
+Complete its discussion and report before human handoff.
 Present a non-approved result and ask for direction; preserve the actual result
 if the human proceeds. Audit questions about material decisions still go to the human;
 the builder check's one question round does not waive that requirement.
 
 ## Human Document Review
 
-Hand over the current design and audit report, state the actual outcome, and
-include a short list of calls you made so the human can check those while reading:
+For a written project design, hand over the current design and audit report,
+state the actual outcome, and include a short list of calls you made so the human
+can check those while reading:
 
 > "Spec: `<spec path>`. Audit: <actual outcome>; report: `<report path>`. My calls: <short list>. Please review the full document and report. Do you approve this design for planning?"
 
-Wait for the human's decision. After direct human edits or changes they request,
+Wait for the human's decision. After handoff, for direct human edits or changes they request,
 rerun self-review and a fresh audit before renewed handoff. Only proceed to
 planning once the human approves the current written design.
 

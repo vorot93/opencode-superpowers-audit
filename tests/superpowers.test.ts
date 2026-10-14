@@ -61,7 +61,7 @@ test('transformed handoffs include actual outcomes, reports, and renewed review 
   const plan = adaptSkill('writing-plans', fixture('writing-plans')).content;
   expect(spec).toContain('Spec: `<spec path>`. Audit: <actual outcome>; report: `<report path>`.');
   expect(spec).toContain('rerun self-review and a fresh audit before renewed handoff');
-  expect(plan).toContain('rerun self-review and\nstart a fresh audit before renewed handoff');
+  expect(plan).toContain('receive self-review and\na fresh audit before renewed handoff');
   for (const ending of ['Which execution approach would you prefer?**', 'Does the plan capture what you want?"**']) {
     expect(plan).toContain('**"Plan: `<plan path>`. Audit: <actual outcome>; report: `<report path>`. Please review both. ' + ending);
   }
@@ -88,4 +88,29 @@ test('automatic review does not alter v7 quick-task, opt-out, small-change, or s
   expect(content.slice(0, designStart)).toBe(original.slice(0, designStart));
   const exceptions = original.slice(original.indexOf('<HARD-GATE>'), original.indexOf('After a project\'s document'));
   expect(content).toContain(exceptions);
+});
+
+test('builder promise scopes its one return to builder questions, not audit questions', () => {
+  const content = adaptSkill('brainstorming', fixture('brainstorming')).content;
+  expect(content).toContain('may come back once with builder questions; additional audit questions are possible.');
+  expect(content).toContain('Audit questions about material decisions still go to the human;');
+  expect(content).toContain('Without a subagent tool, read the document as that builder yourself.');
+});
+
+test('design audit and human handoff explicitly apply only to written projects', () => {
+  const content = adaptSkill('brainstorming', fixture('brainstorming')).content;
+  expect(content).toContain('## Adversarial Review\n\nFor a written project design,');
+  expect(content).toContain('## Human Document Review\n\nFor a written project design,');
+  expect(content).toContain('confirmed conversational intent/decisions and human answers');
+});
+
+test('plan self-review fixes missing tasks before audit dispatch', () => {
+  const content = adaptSkill('writing-plans', fixture('writing-plans')).content;
+  expect(content).toContain('If you find issues, fix them inline. If you find a spec requirement with no task, add the task. Then complete the Adversarial Review stage below.');
+  expect(content).toContain('relevant decisions, and known drafting models.');
+});
+
+test('renewed plan audit is triggered by human changes after handoff, not auditor feedback', () => {
+  const content = adaptSkill('writing-plans', fixture('writing-plans')).content;
+  expect(content).toContain('After handoff, direct human edits or changes they request receive self-review and\na fresh audit before renewed handoff.');
 });

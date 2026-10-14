@@ -96,6 +96,16 @@ for (const [name, reviewers] of [
   });
 }
 
+test('shared intake accepts confirmed conversational inputs and discloses actual drafting work', async () => {
+  const body = await readFile(new URL('../skills/superpowers-audit/SKILL.md', import.meta.url), 'utf8');
+  const text = renderAuditSkill(body, parseOptions({}), []);
+  expect(text).toContain('confirmed conversational intent, decisions, and human answers');
+  expect(text).toContain('a separate brief file is not required.');
+  expect(text).toContain('Question-only review is not automatically drafting.');
+  expect(text).toContain('Disclose substantive drafting contributions regardless of the agent\'s role label.');
+  expect(text).toContain('from every known drafting contributor and the current discussing writer.');
+});
+
 // These full-text snapshots review the rendered artifact, not model obedience.
 // Native pressure scenarios require separate controller-owned verification.
 for (const [name, input] of [

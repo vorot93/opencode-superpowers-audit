@@ -7,10 +7,14 @@ what is known. Read the appended configuration before auditor dispatch.
 
 ## Intake and selection
 
-Identify the current target, spec/plan kind, brief, and known drafting models,
-including subagent contributions. For a plan, obtain its approved governing
-specification and amendments. Ask about missing inputs or unknown imported
-authorship before dispatch.
+Identify the current target, spec/plan kind, confirmed conversational intent, decisions, and human answers,
+and known drafting models, including subagent contributions. Governing inputs may
+be supplied in a brief; a separate brief file is not required. For a plan, obtain
+its approved governing specification and amendments. Ask about missing inputs or
+unknown imported authorship before dispatch.
+
+Question-only review is not automatically drafting.
+Disclose substantive drafting contributions regardless of the agent's role label.
 
 Use Provider ID and Model ID from the `# Your Model` context for the current writer;
 this does not establish earlier authorship. Look up the latest known drafting

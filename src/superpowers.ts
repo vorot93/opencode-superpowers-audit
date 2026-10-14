@@ -11,19 +11,22 @@ export interface SkillAdaptation {
 export const supportedHashes: Record<SupportedSkill, { baseline: string; transformed: string }> = {
   brainstorming: {
     baseline: '7066acbd55d8507328effff41bcf611eafca117c5bd7b9ac7fa545096132533a',
-    transformed: '2711571587d306948e5493f51ec749a7edfc2afd459a1856a417543662d018ff',
+    transformed: 'c9b3c5bbf486330438374cadfc7608af1f3ffabf9150e26af13612a188ac326b',
   },
   'writing-plans': {
     baseline: '1fa01b954171b1d2b8bc0208dfbc6a01edf8a2ca715d18f76f043952e37e744f',
-    transformed: '939170c197e7f7ad6603dd837caa2513b2e2c0b83dfe447fef56d89d6c47eb38',
+    transformed: 'b69c375817015fb0c382f7b5e2c2514f9974947cebafc5bfd8b4b1373ae8df65',
   },
 };
 
 const edits: Record<SupportedSkill, readonly (readonly [string, string])[]> = {
   brainstorming: [
     [
-      'until the check is back. Sort what the builder asks into three piles:',
-      'until the builder check, self-review, and audit are complete. Sort what the builder asks into three piles:',
+      "may come back once with a few questions. Don't hand over the document\n"
+        + 'until the check is back. Sort what the builder asks into three piles:',
+      'may come back once with builder questions; additional audit questions are possible.\n'
+        + "Don't hand over the document until the builder check, self-review, and audit\n"
+        + 'are complete. Sort what the builder asks into three piles:',
     ],
     [
       'document with their answers, then hand it over with a short list of the\n'
@@ -42,17 +45,19 @@ const edits: Record<SupportedSkill, readonly (readonly [string, string])[]> = {
         + "Fix issues inline; preserve the human's decisions and label your own calls.\n"
         + 'Then complete Adversarial Review before handing over the document.\n\n'
         + '## Adversarial Review\n\n'
-        + 'Load the native `superpowers-audit` skill after spec self-review. Supply the\n'
-        + 'written design, agreed brief/decisions, and known drafting models; remain in this\n'
-        + 'writer session. Complete its discussion and report before human handoff.\n'
+        + 'For a written project design, load the native `superpowers-audit` skill after\n'
+        + 'spec self-review. Supply the written design, confirmed conversational intent/decisions and human answers\n'
+        + '(in a brief if available), and known drafting models; remain in this writer session.\n'
+        + 'Complete its discussion and report before human handoff.\n'
         + 'Present a non-approved result and ask for direction; preserve the actual result\n'
         + 'if the human proceeds. Audit questions about material decisions still go to the human;\n'
         + "the builder check's one question round does not waive that requirement.\n\n"
         + '## Human Document Review\n\n'
-        + 'Hand over the current design and audit report, state the actual outcome, and\n'
-        + 'include a short list of calls you made so the human can check those while reading:\n\n'
+        + 'For a written project design, hand over the current design and audit report,\n'
+        + 'state the actual outcome, and include a short list of calls you made so the human\n'
+        + 'can check those while reading:\n\n'
         + '> "Spec: `<spec path>`. Audit: <actual outcome>; report: `<report path>`. My calls: <short list>. Please review the full document and report. Do you approve this design for planning?"\n\n'
-        + "Wait for the human's decision. After direct human edits or changes they request,\n"
+        + "Wait for the human's decision. After handoff, for direct human edits or changes they request,\n"
         + 'rerun self-review and a fresh audit before renewed handoff. Only proceed to\n'
         + 'planning once the human approves the current written design.\n\n'
         + '<HARD-GATE>',
@@ -66,14 +71,14 @@ const edits: Record<SupportedSkill, readonly (readonly [string, string])[]> = {
   ],
   'writing-plans': [
     [
-      'No need to re-review — just fix and move on.',
-      'Then complete the Adversarial Review stage below.',
+      'If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.',
+      'If you find issues, fix them inline. If you find a spec requirement with no task, add the task. Then complete the Adversarial Review stage below.',
     ],
     [
       '## Execution Handoff',
       '## Adversarial Review\n\n'
         + 'After completing self-review, load the native `superpowers-audit` skill. Supply\n'
-        + 'the plan, approved governing spec/amendments, relevant decisions, and known authors.\n'
+        + 'the plan, approved governing spec/amendments, relevant decisions, and known drafting models.\n'
         + 'Run its conversation in this writer session and write its report before handoff.\n'
         + 'Present the actual outcome and ask for direction when it is not Approved.\n\n'
         + '## Execution Handoff',
@@ -94,8 +99,8 @@ const edits: Record<SupportedSkill, readonly (readonly [string, string])[]> = {
     [
       '## Execution Handoff',
       '## Execution Handoff\n\n'
-        + 'After direct human edits or changes requested during review, rerun self-review and\n'
-        + 'start a fresh audit before renewed handoff. Preserve an already selected execution\n'
+        + 'After handoff, direct human edits or changes they request receive self-review and\n'
+        + 'a fresh audit before renewed handoff. Preserve an already selected execution\n'
         + 'method and wait for approval of the revised plan.',
     ],
   ],
