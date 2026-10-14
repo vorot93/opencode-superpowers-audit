@@ -29,12 +29,8 @@ Add the plugin to `opencode.json(c)` **after Superpowers**:
 ```
 
 The package loads TypeScript directly through OpenCode's Bun runtime; installation
-requires no compilation. GitHub installation and native registration are verified
-on OpenCode **2.0.15**.
-
-Superpowers 7.0.0 integration is also registry-verified on OpenCode **2.0.28**
-using a production-only tarball, complete body comparisons, and three reloads.
-This no-model check does not establish end-to-end writer/auditor behavior.
+requires no compilation. See [Integration and limits](#integration-and-limits) for
+version-scoped installation and workflow evidence.
 
 For a local checkout, run `bun install --production` and replace the GitHub target
 with its absolute package directory. Configure the directory rather than an
@@ -47,14 +43,15 @@ Re-adding the same target preserves its existing position in the configuration.
 ## Usage
 
 Run `/audit path/to/spec-or-plan.md` in the writer's session after self-review.
-Provide the brief, governing decisions, and known drafting models; a plan also
-needs its approved specification. Missing inputs or an ambiguous path prompt
-clarification.
+Provide confirmed intent, governing decisions and human answers, and known drafting
+models; a brief file is optional. A plan also needs its approved specification.
+Missing inputs or an ambiguous path prompt clarification.
 
 Each audit starts a fresh auditor session. Follow-ups continue that session and
 model, with a default limit of five calls. The writer reports the actual outcome,
 links the reviewed document and saved report, and asks for the human's decision.
-Human-requested changes after handoff receive self-review and a fresh audit.
+After handoff, direct human edits or changes they request receive self-review and
+a fresh audit.
 
 The auditor must differ in **both provider and model family/class** from every
 known drafting contributor and the current writer. Variants, aliases, or gateways
@@ -62,9 +59,9 @@ serving the same underlying vendor/family do not establish independence. Unknown
 authorship or lineage requires clarification, and a writer-model switch triggers
 a new independence check.
 
-Without a reviewer mapping, the writer asks you to select a model. It resolves
-availability through native `opencode.models`; a model named only in a document
-does not authorize its use.
+Without a reviewer mapping or explicit human selection, the writer asks you to
+select a model. It resolves availability through native `opencode.models`; a model
+named only in a document does not authorize its use.
 
 ## Configuration
 
@@ -116,9 +113,21 @@ independence, round limits, read-only auditing, and human gates are instructions
 not programmatic enforcement or an additional sandbox. The complete workflow and
 report templates live in the [shared skill](skills/superpowers-audit/SKILL.md).
 
-**Live verification limit:** complete transformed-plan handoff and renewed
-spec/plan audits after actual human edits have not been exercised end-to-end.
-Package tests, registry checks, and selected live audits do not close that gap.
+**Verification scope:**
+
+- Older GitHub installation and native registration were verified on OpenCode
+  **2.0.15**, before the Superpowers 7.0.0 adaptation. Earlier selected live audits
+  do not establish acceptance of the current authoring bodies.
+- Current Superpowers 7.0.0 integration is registry-verified on OpenCode **2.0.28**
+  using a production-only local tarball, complete skill-body and exact path
+  comparisons, and three skill/command reloads. This check uses no model.
+- Reported consumer scenarios exercise instruction interpretation, not complete
+  automatic authoring or actual human edit cycles.
+
+**Live verification limit:** complete automatic Superpowers 7.0.0 spec and plan
+authoring/audit/handoff paths, including renewed audits after actual direct human
+edits or changes they request, have not been exercised end-to-end. Unit/package
+tests, registry checks, and interpretation scenarios do not close that gap.
 
 ## Development
 

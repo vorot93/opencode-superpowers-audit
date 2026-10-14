@@ -48,7 +48,8 @@ builder check remains a separate upstream stage: resolve it, self-review the wri
 design, then audit before human approval. The builder check's one question round does
 not limit material decision questions from an audit. Only written designs get
 these document stages; upstream quick-task, opt-out, small-change, and spike
-routes stay unchanged. Human edits require renewed self-review and a fresh audit.
+routes stay unchanged. After handoff, direct human edits or changes they request
+require renewed self-review and a fresh audit.
 
 Whole-body input and output hashes are deliberate compatibility boundaries.
 Matching isolated headings or fragments could silently drop upstream requirements.
@@ -80,7 +81,7 @@ host-version diagnostics and recovery instructions in [AGENTS.md](AGENTS.md).
 
 Unit and package tests establish rendering, registration, asset resolution, and
 complete transformed-body contracts. The native checker verifies those contracts
-against the real registry, including reloads. Neither snapshots nor scenario
-answers prove that models follow the instructions; that requires live native
-conversations and actual human decisions. The current acceptance limit is recorded
-in [README.md](README.md#integration-and-limits).
+against the real registry, including exact skill paths and reloads. Neither
+snapshots nor scenario answers prove that models follow the instructions; that
+requires live native conversations and actual human decisions. The current
+acceptance limit is recorded in [README.md](README.md#integration-and-limits).

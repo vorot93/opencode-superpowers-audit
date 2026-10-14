@@ -1,9 +1,23 @@
 import { expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { adaptSkill, supportedHashes, withIntegrationNotice } from '../src/superpowers.js';
 import { expected, fixture, mutateSentence, skillIDs } from './support/fixtures.js';
 
 const hash = (text: string) => createHash('sha256').update(text).digest('hex');
+
+test('fixture provenance retains the immutable upstream revision and complete-file digests', () => {
+  const root = new URL('./fixtures/superpowers-7.0.0/', import.meta.url);
+  const provenance = readFileSync(new URL('README.md', root), 'utf8');
+  expect(provenance).toContain('https://github.com/obra/superpowers');
+  expect(provenance).toContain('bb92a77741419a4ab5f06e711a283343f1ada0c3');
+  for (const id of skillIDs) {
+    const raw = readFileSync(new URL(`${id}.md`, root));
+    const digest = createHash('sha256').update(raw).digest('hex');
+    const row = provenance.split('\n').find(line => line.startsWith(`| ${id}.md |`));
+    expect(row).toContain(digest);
+  }
+});
 
 for (const [id, from, to] of [
   ['brainstorming', 'You are very good at building.', 'You are very good at local building.'],

@@ -60,8 +60,9 @@ optional and must resolve to that external directory if used.
   golden and snapshot diffs as instructions before changing output hashes.
   Fixture reads strip leading frontmatter and normalize CRLF; native transforms
   receive bodies, not filesystem skill files. Preserve upstream MIT attribution.
-- Update diagrams and scripted handoffs alongside surrounding prose. Human-requested
-  changes require renewed self-review and a fresh audit in both authoring skills.
+- Update diagrams and scripted handoffs alongside surrounding prose. After handoff,
+  direct human edits or changes they request require renewed self-review and a
+  fresh audit in both authoring skills.
 - Preserve the upstream skill path when adapting content. Superpowers 7.0.0's
   builder check resolves `builder-check-prompt.md` relative to that directory;
   it remains a separate stage before writer self-review and the audit.
