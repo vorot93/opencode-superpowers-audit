@@ -47,7 +47,9 @@ Provide confirmed intent, governing decisions and human answers, and known draft
 models; a brief file is optional. A plan also needs its approved specification.
 Missing inputs or an ambiguous path prompt clarification.
 
-Each audit starts a fresh auditor session. Follow-ups continue that session and
+Each audit starts a fresh `explore` auditor session (OpenCode's built-in read-only
+exploration agent; it cannot edit files or launch subagents, though read-only is
+still an instruction rather than a sandbox). Follow-ups continue that session and
 model, with a default limit of five calls. The writer reports the actual outcome,
 links the reviewed document and saved report, and asks for the human's decision.
 After handoff, direct human edits or changes they request receive self-review and

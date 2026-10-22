@@ -63,6 +63,8 @@ test('a source-only tarball loads with production dependencies and registers the
   for (const id of skillIDs) expect(host.skills.get(id)?.content).toBe(expected(id));
   expect(await readFile(new URL('skills/superpowers-audit/SKILL.md', packed), 'utf8'))
     .toBe(await readFile(new URL('skills/superpowers-audit/SKILL.md', root), 'utf8'));
+  expect(await readFile(new URL('skills/superpowers-audit/references/opencode.md', packed), 'utf8'))
+    .toBe(await readFile(new URL('skills/superpowers-audit/references/opencode.md', root), 'utf8'));
   expect(manifest.main).toBe('./index.js');
   expect(manifest.exports).toBe('./index.js');
 });

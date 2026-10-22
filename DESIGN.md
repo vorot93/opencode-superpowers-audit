@@ -25,8 +25,16 @@ workflow, outcome rules, and auditor/report templates. Both `/audit` and the
 adapted authoring skills load it. Keeping the conversation rules in one place
 prevents manual and automatic audits from diverging.
 
-The renderer preserves the supplied body byte-for-byte and appends validated
-configuration and integration status. Configuration JSON is readable data, not a
+The shared body is host-neutral: it names no OpenCode tool, agent, or context
+block. Each host appends its own dispatch reference
+([`references/opencode.md`](skills/superpowers-audit/references/opencode.md) for
+OpenCode), which owns writer identification, the model catalog, and the auditor
+call mechanics, including the `explore` auditor agent. Because compaction can keep
+the body but drop appended context, the body tells the writer to reload the skill
+once and otherwise stop before dispatch.
+
+The renderer preserves the supplied body byte-for-byte and appends the dispatch
+reference, validated configuration, and integration status. Configuration JSON is readable data, not a
 prompt-security boundary. Invalid settings remain visible as a correction request
 so the writer can explain the problem instead of losing the skill or using defaults.
 Artifact paths are resolved by the writer, which has the relevant project context.

@@ -18,6 +18,7 @@ function indentedJson(value: unknown): string {
 
 export function renderAuditSkill(
   body: string,
+  dispatch: string,
   options: OptionsResult,
   integrations: readonly IntegrationStatus[],
 ): string {
@@ -30,7 +31,7 @@ export function renderAuditSkill(
 
   // Add only missing separators; supplied trailing whitespace belongs to the body.
   const separator = body === '' || /(?:\r?\n){2}$/.test(body) ? '' : body.endsWith('\n') ? '\n' : '\n\n';
-  return `${body}${separator}${configuration}\n\n## Registry content integration\n\n${statuses ? statuses + '\n\n' : ''}This is not a per-agent permission verdict. Report known native load denials without enumerating unknown permissions or enabling skills. For unavailable integrations, check that this plugin is listed after Superpowers and that the source skill is present. Manual auditing requires its command and this shared skill to be registered and permitted.\n`;
+  return `${body}${separator}${dispatch.trimEnd()}\n\n${configuration}\n\n## Registry content integration\n\n${statuses ? statuses + '\n\n' : ''}This is not a per-agent permission verdict. Report known native load denials without enumerating unknown permissions or enabling skills. For unavailable integrations, check that this plugin is listed after Superpowers and that the source skill is present. Manual auditing requires its command and this shared skill to be registered and permitted.\n`;
 }
 
 export interface SkillFile {

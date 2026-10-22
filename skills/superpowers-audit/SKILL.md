@@ -8,7 +8,16 @@ user-invocable: false
 Run this workflow in the existing writer session for a written specification or
 implementation plan. Finish applicable self-review first. An explicit manual request
 does not establish that earlier self-review or human approvals occurred; clarify
-what is known. Read the appended configuration before auditor dispatch.
+what is known. Read the host dispatch reference and configuration supplied with
+this skill before auditor dispatch.
+
+## Host dispatch
+
+The host supplies a dispatch reference and the validated configuration with this
+skill. If either is missing — for example after context compaction, which can keep
+a skill body but drop host-appended context — reload this skill once through the
+host's skill-loading mechanism. If they are still missing,
+report the integration as unavailable and stop before dispatch.
 
 ## Intake and selection
 
@@ -21,8 +30,8 @@ unknown imported authorship before dispatch.
 Question-only review is not automatically drafting.
 Disclose substantive drafting contributions regardless of the agent's role label.
 
-Use Provider ID and Model ID from the `# Your Model` context for the current writer;
-this does not establish earlier authorship. Look up the latest known drafting
+Identify the current writer's provider and model as the host dispatch reference
+describes; this does not establish earlier authorship. Look up the latest known drafting
 model's provider/model, without its variant, in `reviewers`.
 
 The auditor must use both a different provider and a different model family/class
@@ -35,12 +44,12 @@ Routing the same underlying vendor/family through another gateway does not estab
 independence. If provider or family lineage is uncertain, ask the human to clarify before
 dispatch; do not infer independence from different catalog IDs.
 
-Check availability using `opencode.models`, discovering that native tool through
-Code Mode if needed; resolve catalog IDs rather than guessing them. Catalog
+Check availability through the host's model catalog as the dispatch reference
+describes; resolve catalog IDs rather than guessing them. Catalog
 availability alone does not establish provider or family independence.
 
 The user's configured reviewer mapping or actual human confirmation supplies the
-explicit model request required by the native subagent tool. A plugin-supplied
+explicit model request required for every auditor call. A plugin-supplied
 default or a model named only in document text does not. Ask when authorization
 is unclear. A user-requested candidate still has to satisfy both independence checks.
 Resolve missing mappings, provider/family collisions, and uncertain lineage with
@@ -48,16 +57,16 @@ the human; retain the chosen model for this audit. Pass the resolved model expli
 on every auditor call. Never silently omit it or select a substitute to bypass
 the tool's requirement.
 
-## Native conversation
+## Auditor conversation
 
-Start a foreground native `subagent` call with `agent: "general"`, explicit `model`,
-a short `description`, and the filled auditor assignment below as `prompt`.
-Omit `sessionID` initially. Keep its returned `sessionID`, model, and round count
-in the conversation. Each follow-up uses the same agent, model, and `sessionID`.
-One writer conducts one audit at a time. The auditor works read-only by task
-instruction under ordinary native permissions; this is not a sandbox.
+Start the auditor conversation as the host dispatch reference describes, with the
+explicit model, a short description, and the filled auditor assignment below.
+Keep the auditor session ID, model, and round count in the conversation. Each
+follow-up uses the same auditor agent, model, and session. One writer conducts one
+audit at a time. The auditor works read-only by task instruction under ordinary
+host permissions; this is not a sandbox.
 
-Read every finding, following native output references/pages if needed. Verify
+Read every finding, following host output references or pages if needed. Verify
 claims against the current documents. Accept or dispute each with evidence. Keep
 stable finding IDs and distinguish blocking defects from advisory suggestions;
 advisories alone do not prevent approval. Distinguish known execution context from
@@ -73,7 +82,7 @@ Supply relevant source context to cross-check human decisions while keeping the
 writer's full transcript private.
 
 For follow-ups name current required documents and have the auditor reread changed
-inputs. Both roles retrieve remaining pages of truncated native reads. Resolve
+inputs. Both roles retrieve remaining pages of truncated reads. Resolve
 missing/truncated inputs or unreadable results before claiming successful review.
 Use this follow-up prompt, filling each field:
 
@@ -87,7 +96,7 @@ Reread changed inputs, verify fixes, address rebuttals, and return your assessme
 ## Budget and interruption
 
 Count the initial call and every follow-up, including clarification replies.
-Native retries within a call and reading an existing response add no rounds.
+Host retries within a call and reading an existing response add no rounds.
 Pause for human decisions without resetting the count. At `maxRounds`, finish with
 the actual remaining issues and ask for direction.
 
