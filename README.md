@@ -40,6 +40,20 @@ If a previously failed installation cannot be updated, rerun
 `opencode plugin add <same-target>` with the exact package string from your config.
 Re-adding the same target preserves its existing position in the configuration.
 
+### Claude Code
+
+The same repository is a Claude Code plugin and a single-plugin marketplace:
+
+```text
+/plugin marketplace add vorot93/opencode-superpowers-audit
+/plugin install superpowers-audit@superpowers-audit
+/plugin configure superpowers-audit@superpowers-audit
+```
+
+Configure reviewers, the round limit, and the artifact directory with
+`/plugin configure` (list options are not `/config` rows). Run
+`/audit path/to/spec-or-plan.md` as above.
+
 ## Usage
 
 Run `/audit path/to/spec-or-plan.md` in the writer's session after self-review.
@@ -138,7 +152,10 @@ bun install
 bun run test
 bun run typecheck
 bun run test:package
+bun run test:claude
 ```
+
+`test:claude` runs `claude plugin validate .` and needs the `claude` CLI.
 
 Package tests exercise a source-only tarball with production dependencies. To
 distribute one after these checks, run

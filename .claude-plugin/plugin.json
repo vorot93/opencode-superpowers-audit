@@ -1,0 +1,30 @@
+{
+  "name": "superpowers-audit",
+  "version": "0.1.0",
+  "description": "Writer-led external audit of Superpowers specifications and implementation plans.",
+  "author": { "name": "Artem Vorotnikov" },
+  "homepage": "https://github.com/vorot93/opencode-superpowers-audit",
+  "repository": "https://github.com/vorot93/opencode-superpowers-audit",
+  "license": "Apache-2.0",
+  "keywords": ["superpowers", "audit", "review", "specification", "plan"],
+  "userConfig": {
+    "reviewers": {
+      "type": "string",
+      "multiple": true,
+      "title": "Reviewers",
+      "description": "Reviewer pairings, one per entry, as writer-provider/model=reviewer-provider/model[#variant]."
+    },
+    "maxRounds": {
+      "type": "number",
+      "min": 1,
+      "default": 5,
+      "title": "Maximum audit rounds",
+      "description": "Positive integer limiting the audit rounds per document."
+    },
+    "artifactDirectory": {
+      "type": "string",
+      "title": "Artifact directory",
+      "description": "Directory for audit artifacts, as a path relative to the project root."
+    }
+  }
+}

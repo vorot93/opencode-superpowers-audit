@@ -1,0 +1,13 @@
+{
+  "name": "superpowers-audit",
+  "description": "Writer-led external audit of Superpowers specifications and implementation plans.",
+  "owner": { "name": "Artem Vorotnikov" },
+  "plugins": [
+    {
+      "name": "superpowers-audit",
+      "source": "./",
+      "version": "0.1.0",
+      "description": "Writer-led external audit of Superpowers specifications and implementation plans."
+    }
+  ]
+}

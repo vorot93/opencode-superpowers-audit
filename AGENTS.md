@@ -23,6 +23,9 @@ optional and must resolve to that external directory if used.
   verification. To refresh direct versions, use `bun add zod@latest` and
   `bun add -d @opencode/plugin@latest typescript@latest @types/bun@latest @types/json-schema@latest`.
   `bun.lock`, `node_modules/`, and tarballs remain untracked.
+- `bun run test:claude` (`claude plugin validate .`) is a separate check that needs
+  the `claude` CLI; it may warn about a missing icon. `skills/audit` (the Claude Code
+  `/audit`) stays out of the npm package via the narrowed `files` entry.
 - Use strict NodeNext TypeScript and type-only host imports. Bun resolves the
   `.js` imports in source/tests to TypeScript; package checks must also exercise
   that resolution outside the checkout, with only production dependencies.
@@ -110,4 +113,6 @@ initializes plugins before failing with `Model unavailable` on OpenCode 2.0.14.
 For no-model checks, deny `provider.use` for `*`, use an empty environment, and
 disable networking. The expected CLI failure alone proves nothing: inspect the
 checker result. Retain credential-free evidence for live verification, then remove
-disposable databases, caches, and unpacked installs. Never ship test fixtures.
+disposable databases, caches, and unpacked installs. Never ship test fixtures in the npm package (`files` lists only runtime paths).
+A Claude Code install is a copy of the whole repository, so it contains `tests/fixtures`;
+that is accepted.
