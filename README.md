@@ -61,21 +61,9 @@ match the [Configuration](#configuration) table. Run
 - The OpenCode CLI (`opencode`) with an authorized non-Anthropic provider: the
   auditor runs as OpenCode's `explore` agent through `opencode run`.
 - The Superpowers plugin, for the automatic stages.
-- No action available to `explore` may resolve to `ask`, because a
-  non-interactive `opencode run` cannot answer it. OpenCode's own `explore` policy
-  asks before reading `*.env` and `*.env.*`, so add this to your OpenCode
-  configuration (the plugin never writes it):
-
-  ```jsonc
-  "agents": { "explore": { "permissions": [
-    { "action": "read", "resource": "*.env", "effect": "deny" },
-    { "action": "read", "resource": "*.env.*", "effect": "deny" }
-  ] } }
-  ```
-
-  The deny avoids the hang; it is not a credential guarantee, because `explore`
-  keeps shell access. The assignment's instruction to keep credentials out of the
-  review remains the control.
+- Unattended auditor runs auto-reject any OpenCode permission that would ask
+  (including `explore`'s built-in ask before reading `*.env` files); the auditor
+  reports what it could not read.
 - Each round runs under a 30-minute limit. On macOS, which ships `perl` but not
   `timeout`, the writer uses `perl` for it.
 - The writer's `reviewers` key is `anthropic/<base model id>`, with gateway and

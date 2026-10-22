@@ -117,10 +117,9 @@ optional and must resolve to that external directory if used.
   existing one; the default output format prints only the reply, not the session ID.
   A round can exceed Claude Code's 10-minute foreground Bash limit, so the reference
   dispatches in the background and waits for the completion notice.
-- A non-interactive `opencode run` cannot answer an OpenCode `ask` permission. The
-  probe that hung on one also had open stdin, so live verification with stdin closed
-  decides the failure mode; the README `agents.explore.permissions` prerequisite and
-  the 30-minute round limit stand either way.
+- A non-interactive `opencode run` auto-rejects an OpenCode `ask` permission (stderr
+  "auto-rejecting"); the tool call fails and the model continues, so `ask` needs no
+  user configuration. An apparent hang on one is the stdin stall above.
 
 ## Native verification
 

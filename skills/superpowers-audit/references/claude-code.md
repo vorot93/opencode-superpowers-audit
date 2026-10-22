@@ -62,8 +62,8 @@ Read `round<N>-reply.md` with the Read tool. The round is delivered when the
 command exited 0 and the reply contains an `## Assessment` section; lines before
 that section are normal. Otherwise Read `round<N>.log` and treat the round as
 undelivered. Exit status 124 (`timeout`) or 142 (`perl`'s alarm) means the
-30-minute limit expired, most likely on an OpenCode `ask` permission that a
-non-interactive run cannot answer: check delivery as below, report a tool failure,
+30-minute limit expired, most likely a stalled client or service (for example stdin
+not closed) or a very long auditor turn: check delivery as below, report a tool failure,
 and ask the human.
 
 ### Unknown delivery
@@ -89,6 +89,6 @@ work files and the OpenCode session are evidence for re-establishing them.
 ### Permissions
 
 Claude Code's permission prompts for these commands remain the user's; nothing is
-pre-authorized. No action available to `explore` may resolve to `ask`. If a round
-expires on one, point the human to the `agents.explore.permissions` prerequisite in
-the plugin README.
+pre-authorized. A permission that the non-interactive run cannot ask about is auto-rejected and the
+auditor continues; the assignment already requires it to state any input it could
+not examine, so weigh that statement in the reply.
