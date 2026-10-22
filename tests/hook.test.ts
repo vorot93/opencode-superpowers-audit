@@ -234,6 +234,7 @@ test('SessionStart compact emits the reload pointer', async () => {
   for (const text of [
     'superpowers:brainstorming', 'superpowers:writing-plans', 'superpowers-audit:superpowers-audit',
     'Skill tool', 'interruption rules', 'same auditor session',
+    'continue from where you were', "do not restart that skill's checklist",
   ]) expect(pointer).toContain(text);
 });
 

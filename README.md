@@ -155,9 +155,10 @@ against Superpowers 7.0.0 and may misdescribe the steps of a later release.
 
 Claude Code re-attaches invoked skill bodies after compaction but not hook output,
 so on compaction the plugin adds a pointer telling the writer to reload the
-Superpowers authoring skill and the shared audit skill with the Skill tool. Recovery
-relies on the writer obeying it and on the shared skill's interruption rules; it is
-not enforced.
+Superpowers authoring skill and the shared audit skill with the Skill tool, then
+continue where it was rather than restart the authoring checklist. Recovery relies
+on the writer obeying it and on the shared skill's interruption rules; it is not
+enforced and has not been verified in a live session.
 
 Manual `/audit` remains usable independently of automatic integration when its
 command and shared skill are loaded and permitted. Registry integration status is
