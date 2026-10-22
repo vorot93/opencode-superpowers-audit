@@ -54,8 +54,9 @@ runtime is guaranteed. Both render the same `## Configuration` block, or an erro
 block that requests correction instead of falling back to defaults. One vector file,
 [`tests/support/config-vectors.ts`](tests/support/config-vectors.ts), drives both
 test suites, and valid vectors must render byte-identical blocks. Claude Code joins
-list options with commas, so reviewer entries exclude commas in both hosts. Error
-wording is host-specific; the shared contract is the block shape and the named key.
+list options with commas and writes each reviewer entry as `writer=reviewer`, so
+writers and reviewers exclude commas and `=` in both hosts. Error wording is
+host-specific; the shared contract is the block shape and the named key.
 
 The renderer preserves the supplied body byte-for-byte and appends the dispatch
 reference, validated configuration, and integration status. Configuration JSON is readable data, not a

@@ -108,8 +108,10 @@ optional and must resolve to that external directory if used.
 - The hook must exit 0 on every path: a failing UserPromptExpansion hook would break
   every slash command. Keep it to POSIX `sh` and stock utilities, committed with mode
   755. `/bin/sh` may be bash locally, so run `AUDIT_HOOK_SHELL=<dash or busybox sh>
-  bun test tests/hook.test.ts` after changing it. Keep content and option values in
-  pipes and awk: dash 0.5.13 in the C locale corrupts non-ASCII bytes on assignment.
+  bun test tests/hook.test.ts` after changing it. Keep the hook input, content, and
+  option values in pipes and awk: dash 0.5.13 in the C locale corrupts non-ASCII
+  bytes on assignment (it inserts `0x81` escape bytes), and typed prompts carry the
+  user's own text.
 - `opencode run` waits for end of input on a non-terminal stdin, and Claude Code's
   Bash stdin may never close, so a run without `< /dev/null` can stall before creating
   its session. Redirect it in every shipped, test, and probe command.

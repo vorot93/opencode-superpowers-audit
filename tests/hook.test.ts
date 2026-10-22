@@ -7,7 +7,7 @@ import { parseOptions } from '../src/options.js';
 import { renderConfiguration } from '../src/skill.js';
 import { configVectors } from './support/config-vectors.js';
 import { skillIDs } from './support/fixtures.js';
-import { hookContext, repoRoot, runHook } from './support/hook.js';
+import { hookContext, repoRoot, runHook, silent } from './support/hook.js';
 
 const read = (path: string) => readFile(join(repoRoot, path), 'utf8');
 const reference = await read('skills/superpowers-audit/references/claude-code.md');
@@ -24,10 +24,15 @@ const typedCommand = (command: string) => JSON.stringify({
 });
 const amendment = (id: string) => read(`integration/claude-code/${id}.md`);
 
+// The context a successful run adds; it must exit 0 and write nothing to stderr.
+async function emitted(input: string, env: Record<string, string> = {}) {
+  const { exitCode, stdout, stderr } = await runHook(input, env);
+  expect({ exitCode, stderr }).toEqual({ exitCode: 0, stderr: '' });
+  return hookContext(stdout);
+}
+
 async function auditContext(env: Record<string, string> = {}, input = JSON.stringify(auditLoad)) {
-  const { exitCode, stdout } = await runHook(input, env);
-  expect(exitCode).toBe(0);
-  const output = hookContext(stdout);
+  const output = await emitted(input, env);
   expect(output?.event).toBe('PostToolUse');
   return output!.context;
 }
@@ -81,17 +86,31 @@ test('authoring skills receive their amendment on load and on typed commands', a
       ['PostToolUse', skillLoad(`superpowers:${id}`)],
       ['UserPromptExpansion', typedCommand(`superpowers:${id}`)],
     ] as const) {
-      const { exitCode, stdout } = await runHook(input);
-      expect(exitCode).toBe(0);
-      expect(hookContext(stdout)).toEqual({ event, context: await amendment(id) });
+      expect(await emitted(input)).toEqual({ event, context: await amendment(id) });
     }
   }
+});
+
+test('routes a typed command whose prompt carries non-ASCII text', async () => {
+  // Typed prompts carry the user's own words. Bytes 0x81-0x88 (here before each
+  // quote) are the ones dash 0.5.13 rewrites when a variable holds them.
+  const input = JSON.stringify({
+    hook_event_name: 'UserPromptExpansion',
+    prompt: '/superpowers:writing-plans Составь план для «сх» и ш',
+    command_args: 'Составь план для «сх» и ш',
+    expansion_type: 'slash_command',
+    command_name: 'superpowers:writing-plans',
+  });
+  expect(await emitted(input)).toEqual({ event: 'UserPromptExpansion', context: await amendment('writing-plans') });
+  // dash's rewrite has so far left JSON structure intact, so routing alone cannot
+  // show it; the hook input must still never pass through a shell variable.
+  expect(await read('hooks/audit-context')).not.toContain('$(cat)');
 });
 
 test('ignores look-alike names', async () => {
   for (const name of ['superpowers:brainstorming-extra', 'my-superpowers:writing-plans', 'superpowers-audit:audit', 'brainstorming']) {
     for (const input of [skillLoad(name), typedCommand(name)]) {
-      expect(await runHook(input)).toEqual({ exitCode: 0, stdout: '' });
+      expect(await runHook(input)).toEqual(silent);
     }
   }
 });
@@ -101,15 +120,14 @@ test('reads the loaded skill from the tool input only', async () => {
   const withResponse = (skill: string) =>
     JSON.stringify({ hook_event_name: 'PostToolUse', tool_input: { skill }, tool_response: { skill: 'x' } });
   expect(await auditContext({}, withResponse('superpowers-audit:superpowers-audit'))).toBe(await auditContext());
-  expect(hookContext((await runHook(withResponse('superpowers:writing-plans'))).stdout))
+  expect(await emitted(withResponse('superpowers:writing-plans')))
     .toEqual({ event: 'PostToolUse', context: await amendment('writing-plans') });
 
   // Strings that look like keys, braces, and key order do not confuse the scan.
   const tricky = '{"tool_input": {"args": "a \\"skill\\": \\"x\\" } \\\\", "skill": "superpowers:brainstorming"},'
     + ' "hook_event_name": "PostToolUse"}';
   expect(JSON.parse(tricky).tool_input.skill).toBe('superpowers:brainstorming');
-  expect(hookContext((await runHook(tricky)).stdout))
-    .toEqual({ event: 'PostToolUse', context: await amendment('brainstorming') });
+  expect(await emitted(tricky)).toEqual({ event: 'PostToolUse', context: await amendment('brainstorming') });
 
   for (const input of [
     { hook_event_name: 'PostToolUse', tool_input: {}, tool_response: { skill: 'superpowers:brainstorming' } },
@@ -117,7 +135,7 @@ test('reads the loaded skill from the tool input only', async () => {
     { hook_event_name: 'PostToolUse', skill: 'superpowers:brainstorming' },
     { tool_input: { hook_event_name: 'PostToolUse', skill: 'superpowers:brainstorming' } },
   ]) {
-    expect(await runHook(JSON.stringify(input))).toEqual({ exitCode: 0, stdout: '' });
+    expect(await runHook(JSON.stringify(input))).toEqual(silent);
   }
 });
 
@@ -136,7 +154,7 @@ test('fails open', async () => {
       [JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup' }), {}],
     ];
     for (const [input, env] of cases) {
-      expect(await runHook(input, env)).toEqual({ exitCode: 0, stdout: '' });
+      expect(await runHook(input, env)).toEqual(silent);
     }
   } finally {
     await rm(empty, { recursive: true });
@@ -192,9 +210,7 @@ test('reference covers recovery and identity rules', () => {
 });
 
 test('SessionStart compact emits the reload pointer', async () => {
-  const { exitCode, stdout } = await runHook(JSON.stringify({ hook_event_name: 'SessionStart', source: 'compact' }));
-  expect(exitCode).toBe(0);
-  const output = hookContext(stdout);
+  const output = await emitted(JSON.stringify({ hook_event_name: 'SessionStart', source: 'compact' }));
   expect(output).toEqual({ event: 'SessionStart', context: await read('integration/claude-code/compact.md') });
   const pointer = output!.context;
   expect(pointer).toStartWith('## superpowers-audit after compaction\n');
@@ -205,7 +221,8 @@ test('SessionStart compact emits the reload pointer', async () => {
   ]) expect(pointer).toContain(text);
 });
 
-test('SessionStart startup emits nothing', async () => {
-  expect(await runHook(JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup' })))
-    .toEqual({ exitCode: 0, stdout: '' });
+test('SessionStart other than compact emits nothing', async () => {
+  for (const source of ['startup', 'resume', 'clear']) {
+    expect(await runHook(JSON.stringify({ hook_event_name: 'SessionStart', source }))).toEqual(silent);
+  }
 });

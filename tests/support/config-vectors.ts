@@ -84,6 +84,21 @@ export const configVectors: readonly ConfigVector[] = [
     valid: false,
     errorKey: 'reviewers',
   },
+  // The env form separates writer from reviewer with `=`, so neither side may contain one.
+  {
+    name: 'equals sign in writer',
+    options: { reviewers: { 'a/w=x': 'b/r' } },
+    env: reviewers('a/w=x=b/r'),
+    valid: false,
+    errorKey: 'reviewers',
+  },
+  {
+    name: 'equals sign in reviewer',
+    options: { reviewers: { 'a/w': 'b/r=x' } },
+    env: reviewers('a/w=b/r=x'),
+    valid: false,
+    errorKey: 'reviewers',
+  },
   // A comma cannot be represented in the comma-joined env form, so both hosts reject it.
   { name: 'comma in entry', options: { reviewers: { 'a/w': 'b/r,x' } }, valid: false, errorKey: 'reviewers' },
   { name: 'trailing comma', env: reviewers('a/w=b/r,'), valid: false, errorKey: 'reviewers' },

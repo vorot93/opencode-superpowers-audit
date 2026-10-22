@@ -10,9 +10,10 @@ export type OptionsResult =
   | { ok: true; value: AuditOptions }
   | { ok: false; message: string };
 
-// Commas are excluded because Claude Code joins list options with them.
-const author = z.string().regex(/^[^\s/#,]+\/[^\s#,]+$/);
-const reviewer = z.string().regex(/^[^\s/#,]+\/[^\s#,]+(?:#[^\s#,]+)?$/);
+// Commas and `=` are excluded because Claude Code joins list options with commas
+// and writes each reviewers entry as `writer=reviewer`.
+const author = z.string().regex(/^[^\s/#,=]+\/[^\s#,=]+$/);
+const reviewer = z.string().regex(/^[^\s/#,=]+\/[^\s#,=]+(?:#[^\s#,=]+)?$/);
 const schema = z.object({
   reviewers: z.record(author, reviewer).default({}),
   maxRounds: z.number().int().positive().default(5),

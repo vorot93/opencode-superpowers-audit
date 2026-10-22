@@ -6,24 +6,33 @@
 # unexpected (no plugin root, a missing file, unrecognized input) emits nothing.
 # Claude Code guarantees no runtime beyond POSIX sh and stock utilities.
 #
-# Content and option values stay in pipes and awk, never in shell variables:
-# dash 0.5.13 in the C locale corrupts non-ASCII bytes on variable assignment.
-# The hook input is held in one only to extract its ASCII routing fields.
+# The hook input, content, and option values stay in pipes and awk, never in
+# shell variables: dash 0.5.13 in the C locale corrupts non-ASCII bytes on
+# variable assignment, and typed prompts carry the user's own text. Only the
+# extracted route is held in one.
 
 trap 'exit 0' EXIT
 LC_ALL=C
 export LC_ALL
 
-# field PATH: the string value at PATH, object keys joined by dots (such as
-# tool_input.skill), in the hook input, with escapes left as written. It tracks
-# strings and nesting, so the same key inside a string, an array, or another
-# object (a tool_response, say) never matches. Splitting on quotes keeps the
-# scan linear; a piece ending in an odd run of backslashes ends at an escaped
-# quote, so the string continues.
-field() {
-  printf '%s\n' "$input" | awk -v path="$1" '
-    { json = json " " $0 }
-    END {
+# route: EVENT:SUBJECT for the hook input on standard input, where SUBJECT names
+# what fired the event (tool_input.skill, command_name, or source); nothing for
+# another event or a missing subject. Values keep their escapes as written. The
+# scan tracks strings and nesting, so a key of the same name inside a string, an
+# array, or another object (a tool_response, say) never matches. Splitting on
+# quotes keeps it linear; a piece ending in an odd run of backslashes ends at an
+# escaped quote, so the string continues.
+route() {
+  awk '
+    function subject_path(event) {
+      if (event == "PostToolUse") return "tool_input.skill"
+      if (event == "UserPromptExpansion") return "command_name"
+      if (event == "SessionStart") return "source"
+      return ""
+    }
+    # Records the value at each wanted path, first occurrence only; returns
+    # once the event and its subject are both known.
+    function scan(json,   count, piece, p, i, c, text, inside, depth, container, key, previous, at, d) {
       count = split(json, piece, "\"")
       depth = 0; inside = 0
       for (p = 1; p <= count; p++) {
@@ -39,7 +48,10 @@ field() {
           if (container[depth] == "{" && previous == ":") {
             at = key[1]
             for (d = 2; d <= depth; d++) at = at "." key[d]
-            if (at == path) { print text; exit }
+            if (at in wanted && !(at in value)) {
+              value[at] = text
+              if (("hook_event_name" in value) && (subject_path(value["hook_event_name"]) in value)) return
+            }
           }
           previous = "value"
           continue
@@ -53,6 +65,15 @@ field() {
         }
         inside = 1; text = ""
       }
+    }
+    { json = json " " $0 }
+    END {
+      split("hook_event_name tool_input.skill command_name source", names, " ")
+      for (n in names) wanted[names[n]] = 1
+      scan(json)
+      event = value["hook_event_name"]
+      subject = subject_path(event)
+      if (subject != "" && subject in value) print event ":" value[subject]
     }'
 }
 
@@ -86,14 +107,16 @@ emit() {
 
 # configuration: the block renderConfiguration (src/skill.ts) renders for the
 # same options. Claude Code exports only the options the user set and joins the
-# reviewers list with commas; the rules mirror src/options.ts and are tested
-# against the same vectors. An empty reviewers list has no entries.
+# reviewers list with commas; each entry splits at its first `=`. Neither
+# character may appear in a writer or reviewer, so no entry is ambiguous. The
+# rules mirror src/options.ts and are tested against the same vectors. An empty
+# reviewers list has no entries.
 configuration() {
   awk "$escape_function"'
     function fail(message) { errors = errors (errors == "" ? "" : "\n") message }
     BEGIN {
-      writer_pattern = "^[^[:space:]/#,]+/[^[:space:]#,]+$"
-      reviewer_pattern = "^[^[:space:]/#,]+/[^[:space:]#,]+(#[^[:space:]#,]+)?$"
+      writer_pattern = "^[^[:space:]/#,=]+/[^[:space:]#,=]+$"
+      reviewer_pattern = "^[^[:space:]/#,=]+/[^[:space:]#,=]+(#[^[:space:]#,=]+)?$"
       list = ENVIRON["CLAUDE_PLUGIN_OPTION_REVIEWERS"]
       count = (list == "") ? 0 : split(list, entries, ",")
       for (i = 1; i <= count; i++) {
@@ -136,18 +159,10 @@ configuration() {
 }
 
 [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] || exit 0
-input=$(cat)
-event=$(field hook_event_name)
+route=$(route)
+event=${route%%:*}
 
-# Each event names its subject differently; a route is one arm below.
-case $event in
-  PostToolUse) subject=$(field tool_input.skill) ;;
-  UserPromptExpansion) subject=$(field command_name) ;;
-  SessionStart) subject=$(field source) ;;
-  *) exit 0 ;;
-esac
-
-case $event:$subject in
+case $route in
   PostToolUse:superpowers-audit:superpowers-audit)
     reference=$CLAUDE_PLUGIN_ROOT/skills/superpowers-audit/references/claude-code.md
     [ -r "$reference" ] || exit 0
@@ -157,7 +172,7 @@ case $event:$subject in
   # this plugin adds beside the unchanged upstream body.
   PostToolUse:superpowers:brainstorming | UserPromptExpansion:superpowers:brainstorming | \
   PostToolUse:superpowers:writing-plans | UserPromptExpansion:superpowers:writing-plans)
-    amendment=$CLAUDE_PLUGIN_ROOT/integration/claude-code/${subject#superpowers:}.md
+    amendment=$CLAUDE_PLUGIN_ROOT/integration/claude-code/${route##*:}.md
     [ -r "$amendment" ] || exit 0
     emit "$event" < "$amendment"
     ;;

@@ -12,7 +12,7 @@ const shell = process.env.AUDIT_HOOK_SHELL ?? 'sh';
 export async function runHook(
   input: string,
   env: Record<string, string | undefined> = {},
-): Promise<{ exitCode: number; stdout: string }> {
+): Promise<{ exitCode: number; stdout: string; stderr: string }> {
   const merged: Record<string, string | undefined> = { PATH: process.env.PATH, CLAUDE_PLUGIN_ROOT: repoRoot, ...env };
   const child = Bun.spawn([shell, script], {
     env: Object.fromEntries(Object.entries(merged).filter((entry): entry is [string, string] => entry[1] !== undefined)),
@@ -20,9 +20,14 @@ export async function runHook(
     stdout: 'pipe',
     stderr: 'pipe',
   });
-  const [stdout, exitCode] = await Promise.all([new Response(child.stdout).text(), child.exited]);
-  return { exitCode, stdout };
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited,
+  ]);
+  return { exitCode, stdout, stderr };
 }
+
+// The result of a hook run that adds no context: Claude Code proceeds unchanged.
+export const silent = { exitCode: 0, stdout: '', stderr: '' } as const;
 
 // Parses hook output, requiring exactly the shape Claude Code reads.
 export function hookContext(stdout: string): { event: string; context: string } | null {
