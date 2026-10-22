@@ -1,8 +1,9 @@
-# OpenCode Superpowers Audit
+# Superpowers Audit
 
-Independent review of specifications and implementation plans in OpenCode v2.
-The plugin adds `/audit`, a shared audit skill, and automatic audit stages for
-Superpowers **7.0.0** brainstorming and writing-plans skills.
+Independent review of specifications and implementation plans in OpenCode v2 and
+Claude Code. The plugin adds `/audit`, a shared audit skill, and automatic audit
+stages for Superpowers **7.0.0** brainstorming and writing-plans skills. In both
+hosts, the auditor is OpenCode's `explore` agent on a model you choose.
 
 > Write → self-review → independent audit → human document review.
 
@@ -15,6 +16,8 @@ justified corrections, and saves a Markdown report. Material design changes go t
 the human. Auditor approval does not replace human document approval.
 
 ## Installation
+
+### OpenCode
 
 Add the plugin to `opencode.json(c)` **after Superpowers**:
 
@@ -61,6 +64,8 @@ match the [Configuration](#configuration) table. Run
 - The OpenCode CLI (`opencode`) with an authorized non-Anthropic provider: the
   auditor runs as OpenCode's `explore` agent through `opencode run`.
 - The Superpowers plugin, for the automatic stages.
+- Linux or macOS: the plugin's hook is a POSIX `sh` script, and Windows is not
+  supported.
 - Unattended auditor runs auto-reject any OpenCode permission that would ask
   (including `explore`'s built-in ask before reading `*.env` files); the auditor
   reports what it could not read. Rejection blocks only that tool call: the
@@ -102,13 +107,15 @@ authorship or lineage requires clarification, and a writer-model switch triggers
 a new independence check.
 
 Without a reviewer mapping or explicit human selection, the writer asks you to
-select a model. It resolves availability through native `opencode.models`; a model
+select a model. It resolves availability from OpenCode's model catalog: native
+`opencode.models` in OpenCode, the `opencode models` command in Claude Code. A model
 named only in a document does not authorize its use.
 
 ## Configuration
 
-Use the object form to set options. These model references are placeholders;
-replace them with your explicit choices resolved through `opencode.models`.
+In OpenCode, use the object form to set options; Claude Code uses
+`/plugin configure` as [described above](#claude-code). These model references are
+placeholders; replace them with explicit choices from your OpenCode model catalog.
 
 ```jsonc
 {
@@ -161,8 +168,8 @@ on the writer obeying it and on the shared skill's interruption rules; it is not
 enforced and has not been verified in a live session.
 
 Manual `/audit` remains usable independently of automatic integration when its
-command and shared skill are loaded and permitted. Registry integration status is
-separate from native permission denials.
+command and shared skill are loaded and permitted. In OpenCode, registry
+integration status is separate from native permission denials.
 
 The writer runs the audit using ordinary native tools and permissions. Model
 independence, round limits, read-only auditing, and human gates are instructions,
@@ -174,16 +181,27 @@ report templates live in the [shared skill](skills/superpowers-audit/SKILL.md).
 - Older GitHub installation and native registration were verified on OpenCode
   **2.0.15**, before the Superpowers 7.0.0 adaptation. Earlier selected live audits
   do not establish acceptance of the current authoring bodies.
-- Current Superpowers 7.0.0 integration is registry-verified on OpenCode **2.0.28**
-  using a production-only local tarball, complete skill-body and exact path
-  comparisons, and three skill/command reloads. This check uses no model.
-- Reported consumer scenarios exercise instruction interpretation, not complete
-  automatic authoring or actual human edit cycles.
+- Current Superpowers 7.0.0 integration is registry-verified on OpenCode **2.1.2**
+  using a production-only local tarball: complete adapted skill bodies and exact
+  upstream paths, the shared skill with its OpenCode dispatch reference naming
+  `explore`, and three skill/command reloads. This check uses no model.
+- Live on OpenCode 2.1.2, a writer following the shared skill made a native
+  `subagent` call with `agent: "explore"` and an explicit model (`xai/grok-4.7`).
+- Live in Claude Code with the plugin loaded by `--plugin-dir`, manual `/audit` ran
+  two auditor rounds to Approved and saved its report. It passed the round prompt
+  differently from the shipped `-f` attachment, which a separate `opencode run`
+  probe verified, including a prompt file outside the project. The automatic
+  stages appeared after a typed `/superpowers:writing-plans` and after a Skill-tool
+  load of `superpowers:brainstorming`. Both `/audit` and `/superpowers-audit:audit`
+  resolve and deliver the dispatch reference and configuration.
 
-**Live verification limit:** complete automatic Superpowers 7.0.0 spec and plan
-authoring/audit/handoff paths, including renewed audits after actual direct human
-edits or changes they request, have not been exercised end-to-end. Unit/package
-tests, registry checks, and interpretation scenarios do not close that gap.
+**Live verification limit:** not exercised live are compaction recovery; the
+fallback for denied output redirections; a round expiring (exit 124 or 142) under
+the shipped reference, though expiry, session export, and resend were exercised
+manually during development; complete automatic Superpowers 7.0.0 spec and plan
+authoring, audit, and handoff in either host; and renewed audits after actual
+direct human edits or changes they request. Unit/package tests, registry checks,
+and interpretation scenarios do not close that gap.
 
 ## Development
 

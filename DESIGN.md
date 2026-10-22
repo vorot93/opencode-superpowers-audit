@@ -36,15 +36,26 @@ prevents manual and automatic audits from diverging.
 The shared body is host-neutral: it names no OpenCode tool, agent, or context
 block. Each host appends its own dispatch reference
 ([`references/opencode.md`](skills/superpowers-audit/references/opencode.md) for
-OpenCode, [`references/claude-code.md`](skills/superpowers-audit/references/claude-code.md)
-for Claude Code), which owns writer identification, the model catalog, and the auditor
-call mechanics, including the `explore` auditor agent. Because compaction can keep
-the body but drop appended context, the body tells the writer to reload the skill
-once and otherwise stop before dispatch.
+OpenCode,
+[`references/claude-code.md`](skills/superpowers-audit/references/claude-code.md)
+for Claude Code), which owns writer identification, the model catalog, and the
+auditor call mechanics, including the `explore` auditor agent. Because compaction
+can keep the body but drop appended context, the body tells the writer to reload
+the skill once and otherwise stop before dispatch.
 
-OpenCode's renderer appends the reference and configuration to the body. Claude Code
+OpenCode's renderer preserves the supplied body byte-for-byte and appends the
+dispatch reference, validated configuration, and integration status. Claude Code
 cannot change a skill body, so [`hooks/audit-context`](hooks/audit-context) adds the
-same material as hook context when the Skill tool loads the shared skill.
+reference and configuration as hook context when the Skill tool loads the shared
+skill. Configuration JSON is readable data, not a prompt-security boundary. Invalid
+settings remain visible as a correction request so the writer can explain the
+problem instead of losing the skill or using defaults. Artifact paths are resolved
+by the writer, which has the relevant project context.
+
+OpenCode's `/audit` command appends its loading instruction to the native prompt
+rather than prepending or rebuilding it: attachment mention offsets must remain
+valid. Native prompt admission errors propagate without retries because admission
+may be ambiguous.
 
 ## Two validators, one vector set
 
@@ -57,16 +68,6 @@ test suites, and valid vectors must render byte-identical blocks. Claude Code jo
 list options with commas and writes each reviewer entry as `writer=reviewer`, so
 writers and reviewers exclude commas and `=` in both hosts. Error wording is
 host-specific; the shared contract is the block shape and the named key.
-
-The renderer preserves the supplied body byte-for-byte and appends the dispatch
-reference, validated configuration, and integration status. Configuration JSON is readable data, not a
-prompt-security boundary. Invalid settings remain visible as a correction request
-so the writer can explain the problem instead of losing the skill or using defaults.
-Artifact paths are resolved by the writer, which has the relevant project context.
-
-The command appends its loading instruction to the native prompt rather than
-prepending or rebuilding it: attachment mention offsets must remain valid. Native
-prompt admission errors propagate without retries because admission may be ambiguous.
 
 ## Adapt only known skill bodies
 

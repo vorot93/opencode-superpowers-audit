@@ -4,8 +4,10 @@
 
 Read [README.md](README.md) for user behavior and [DESIGN.md](DESIGN.md) for
 architectural boundaries. The shared audit skill is the workflow source of truth.
-Preserve writer-led review, ordinary native subagent calls, self-review, and human
-approval. Historical process plans are not requirements for a custom orchestrator.
+Preserve writer-led review, ordinary host-native auditor calls (a native subagent
+call in OpenCode, `opencode run` from the Bash tool in Claude Code), self-review,
+and human approval. Historical process plans are not requirements for a custom
+orchestrator.
 
 Keep these documents evergreen: record non-obvious constraints and decisions,
 not task reports, test-run inventories, or facts evident from the code. Correct
@@ -57,11 +59,11 @@ optional and must resolve to that external directory if used.
 
 - Use native tools and public OpenCode v2 documentation at
   `https://opencode.ai/v2/docs/` for host contracts.
-- The shared skill's YAML frontmatter is the single metadata source: Claude Code reads it
-  natively, and OpenCode registration strips it and takes `description` from it. Rendered
-  bodies must never include frontmatter.
-  Do not duplicate its templates in the command or adapters, or trim supplied body
-  bytes while adjusting renderer separators.
+- The shared skill's YAML frontmatter is the single metadata source: Claude Code
+  reads it natively, and OpenCode registration strips it and takes `description`
+  from it. Rendered bodies must never include frontmatter. Do not duplicate the
+  skill's templates in the command or adapters, or trim supplied body bytes while
+  adjusting renderer separators.
 - Author expected transformed bodies independently of the adapter. Review complete
   golden and snapshot diffs as instructions before changing output hashes.
   Fixture reads strip leading frontmatter and normalize CRLF; native transforms
@@ -144,6 +146,12 @@ a fake HOME alone is insufficient. Isolate ancestor configuration, HOME, XDG, an
 temporary/cache roots. With a read-only bubblewrap root, use existing mount targets
 and `--dev-bind /dev /dev` so Bun can read `/dev/urandom`.
 
+In live OpenCode checks, a plugin listed in the user's global configuration (such as
+the GitHub-installed audit plugin) wins over a project-local package of the same
+plugin, so the writer silently gets the old skill. Isolate the configuration with
+`XDG_CONFIG_HOME=<directory containing opencode/opencode.jsonc>` and
+`opencode run --standalone`; this keeps the user's authorization and data.
+
 Load `tests/native/check-plugin.ts` **last**, as a package directory rather than a
 standalone configured file:
 
@@ -159,15 +167,15 @@ exact native skill paths, or null for absence), and `statuses` (expected lines i
 the shared skill). Pin upstream paths, not just relative helper availability:
 the builder prompt resolves relative to the preserved brainstorming skill path.
 Remove any old result before launching so a skipped checker cannot pass on stale
-evidence. Require fresh `ok: true` output; the checker compares complete bodies, paths, and
-three skill/command reloads. A missing shared asset instead requires a visible load
-error and no successful checker result.
+evidence. Require fresh `ok: true` output; the checker compares complete bodies,
+paths, and three skill/command reloads. A missing shared asset instead requires a
+visible load error and no successful checker result.
 
 A bounded `opencode run --standalone --model fixture/unavailable 'Load the configured plugins'`
 initializes plugins before failing with `Model unavailable` on OpenCode 2.0.14.
 For no-model checks, deny `provider.use` for `*`, use an empty environment, and
 disable networking. The expected CLI failure alone proves nothing: inspect the
 checker result. Retain credential-free evidence for live verification, then remove
-disposable databases, caches, and unpacked installs. Never ship test fixtures in the npm package (`files` lists only runtime paths).
-A Claude Code install is a copy of the whole repository, so it contains `tests/fixtures`;
-that is accepted.
+disposable databases, caches, and unpacked installs. Never ship test fixtures in
+the npm package (`files` lists only runtime paths). A Claude Code install is a copy
+of the whole repository, so it contains `tests/fixtures`; that is accepted.
