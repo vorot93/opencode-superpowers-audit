@@ -76,7 +76,7 @@ match the [Configuration](#configuration) table. Run
 - The writer runs these commands with the Bash tool, under your Claude Code
   permission rules; approve them when asked or allow them in your settings, as
   the plugin pre-authorizes nothing: `opencode models`,
-  `opencode session list --format json`, `mkdir` for the audit work directory,
+  `opencode session list --format json`,
   `timeout 30m opencode run …` (or `perl -e … opencode run …`) with its output
   redirected into that directory, and `opencode session export`. If you deny the
   redirection, the writer saves each reply itself.
@@ -188,15 +188,15 @@ report templates live in the [shared skill](skills/superpowers-audit/SKILL.md).
 - Live on OpenCode 2.1.2, a writer following the shared skill made a native
   `subagent` call with `agent: "explore"` and an explicit model (`xai/grok-4.7`).
 - Live in Claude Code with the plugin loaded by `--plugin-dir`, manual `/audit` ran
-  two auditor rounds to Approved and saved its report. It passed the round prompt
-  differently from the shipped `-f` attachment, which a separate `opencode run`
-  probe verified, including a prompt file outside the project. The automatic
+  two auditor rounds to Approved and saved its report. It used the shipped `-f`
+  dispatch with stdin closed and saved round prompt and reply files; the fallback
+  of saving a reply with the Write tool when output is not redirected was
+  exercised. The automatic
   stages appeared after a typed `/superpowers:writing-plans` and after a Skill-tool
   load of `superpowers:brainstorming`. Both `/audit` and `/superpowers-audit:audit`
   resolve and deliver the dispatch reference and configuration.
 
-**Live verification limit:** not exercised live are compaction recovery; the
-fallback for denied output redirections; a round expiring (exit 124 or 142) under
+**Live verification limit:** not exercised live are compaction recovery; a round expiring (exit 124 or 142) under
 the shipped reference, though expiry, session export, and resend were exercised
 manually during development; complete automatic Superpowers 7.0.0 spec and plan
 authoring, audit, and handoff in either host; and renewed audits after actual
