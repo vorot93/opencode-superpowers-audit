@@ -190,3 +190,22 @@ test('reference covers recovery and identity rules', () => {
   const exportLines = reference.split('\n').filter(line => line.includes('opencode session export'));
   expect(exportLines.some(line => line.includes('2>&1'))).toBe(true);
 });
+
+test('SessionStart compact emits the reload pointer', async () => {
+  const { exitCode, stdout } = await runHook(JSON.stringify({ hook_event_name: 'SessionStart', source: 'compact' }));
+  expect(exitCode).toBe(0);
+  const output = hookContext(stdout);
+  expect(output).toEqual({ event: 'SessionStart', context: await read('integration/claude-code/compact.md') });
+  const pointer = output!.context;
+  expect(pointer).toStartWith('## superpowers-audit after compaction\n');
+  expect(pointer.trimEnd().split('\n').length).toBeLessThanOrEqual(8);
+  for (const text of [
+    'superpowers:brainstorming', 'superpowers:writing-plans', 'superpowers-audit:superpowers-audit',
+    'Skill tool', 'interruption rules', 'same auditor session',
+  ]) expect(pointer).toContain(text);
+});
+
+test('SessionStart startup emits nothing', async () => {
+  expect(await runHook(JSON.stringify({ hook_event_name: 'SessionStart', source: 'startup' })))
+    .toEqual({ exitCode: 0, stdout: '' });
+});

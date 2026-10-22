@@ -161,4 +161,11 @@ case $event:$subject in
     [ -r "$amendment" ] || exit 0
     emit "$event" < "$amendment"
     ;;
+  # Compaction re-attaches invoked skill bodies but not hook output, so point
+  # the writer back at the skills whose context was lost.
+  SessionStart:compact)
+    pointer=$CLAUDE_PLUGIN_ROOT/integration/claude-code/compact.md
+    [ -r "$pointer" ] || exit 0
+    emit "$event" < "$pointer"
+    ;;
 esac

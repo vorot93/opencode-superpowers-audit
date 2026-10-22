@@ -142,8 +142,8 @@ rather than silently activating defaults.
 
 ## Integration and limits
 
-Automatic integration recognizes the exact Superpowers 7.0.0 skill bodies, not
-just a package version. Older versions are not adapted.
+In OpenCode, automatic integration recognizes the exact Superpowers 7.0.0 skill
+bodies, not just a package version. Older versions are not adapted.
 Changed or customized definitions retain their content with an **Audit integration
 unavailable** notice; missing skills stay absent. Check plugin order and the status
 in the shared audit skill when integration is unavailable. Installed Superpowers
@@ -155,6 +155,12 @@ loads through the Skill tool or is typed as a slash command, the plugin adds an
 amendment that names the upstream steps it supersedes. There is no body check, so
 the stages are added for any Superpowers version, but the amendments are written
 against Superpowers 7.0.0 and may misdescribe the steps of a later release.
+
+Claude Code re-attaches invoked skill bodies after compaction but not hook output,
+so on compaction the plugin adds a pointer telling the writer to reload the
+Superpowers authoring skill and the shared audit skill with the Skill tool. Recovery
+relies on the writer obeying it and on the shared skill's interruption rules; it is
+not enforced.
 
 Manual `/audit` remains usable independently of automatic integration when its
 command and shared skill are loaded and permitted. Registry integration status is
