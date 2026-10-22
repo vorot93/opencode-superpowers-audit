@@ -195,6 +195,15 @@ test('reference covers the dispatch contract', () => {
   const runLines = reference.split('\n').filter(line => line.includes('opencode run'));
   expect(runLines.length).toBeGreaterThan(0);
   for (const line of runLines) expect(line).toContain('< /dev/null');
+  // The prompt is attached, not substituted: Claude Code permission rules
+  // prompt for or block command substitution.
+  const commands = reference.split('\n').filter(line => line.includes('opencode run --agent'));
+  expect(commands.length).toBeGreaterThan(0);
+  for (const line of commands) {
+    expect(line).toContain("--title 'audit: <slug>' -f '<work dir>/round<N>-prompt.md' 'Your audit assignment for this"
+      + " round is the attached file; follow it exactly and reply in the format it specifies.' < /dev/null");
+  }
+  expect(reference).not.toContain('$(cat');
 });
 
 test('reference covers recovery and identity rules', () => {
@@ -202,8 +211,15 @@ test('reference covers recovery and identity rules', () => {
     'ask the human which mapping entry applies', 'round<N>-prompt.md', 'round<N>-reply.md', 'round<N>.log',
     'do not poll or sleep', 'Session not found', 'resend only if the round\'s prompt is absent',
     'recovering an existing reply adds no round', 'ask the human if the prompt arrived without a reply',
+    // Denied redirections: same command, reply saved by the writer.
+    'run the same command without the output redirections', 'background task\'s output',
+    'save the reply text to `round<N>-reply.md` with the Write tool',
+    // A reply without the Assessment heading is delivered but misformatted.
+    'format problem, not non-delivery', 'restate', 'that follow-up counts as a round',
+    // Auto-rejection blocks one tool call; it is not a credential boundary.
+    'blocks only that tool call', 'its shell can still read the same file',
   ]) {
-    expect(reference).toContain(text);
+    expect(reference.replace(/\s+/g, ' ')).toContain(text);
   }
   const exportLines = reference.split('\n').filter(line => line.includes('opencode session export'));
   expect(exportLines.some(line => line.includes('2>&1'))).toBe(true);

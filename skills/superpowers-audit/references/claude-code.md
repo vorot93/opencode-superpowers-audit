@@ -46,25 +46,37 @@ the dispatch writes the reply to `round<N>-reply.md` and diagnostics to
 From the project root, run each round as one Bash call with `run_in_background: true`:
 
 ```sh
-timeout 30m opencode run --agent explore -m '<provider/model#variant>' -s '<session id>' --title 'audit: <topic>' "$(cat '<work dir>/round<N>-prompt.md')" < /dev/null > '<work dir>/round<N>-reply.md' 2> '<work dir>/round<N>.log'
+timeout 30m opencode run --agent explore -m '<provider/model#variant>' -s '<session id>' --title 'audit: <slug>' -f '<work dir>/round<N>-prompt.md' 'Your audit assignment for this round is the attached file; follow it exactly and reply in the format it specifies.' < /dev/null > '<work dir>/round<N>-reply.md' 2> '<work dir>/round<N>.log'
 ```
 
-Pass the resolved model with its `#variant`, if any. Where `timeout` is absent
-(macOS), replace `timeout 30m` with `perl -e 'alarm shift; exec @ARGV' 1800`.
-Keep `< /dev/null`: without it, `opencode run` waits for end of input
-and can stall before creating the session. Do not pass `--auto`: it would approve
-requests that the user's OpenCode permissions leave to `ask`. Wait for Claude
-Code's completion notice; do not poll or sleep.
+Pass the resolved model with its `#variant`, if any. `-f` attaches the prompt
+file, so the command needs no command substitution. Where `timeout` is absent
+(macOS), replace `timeout 30m` with `perl -e 'alarm shift; exec @ARGV' 1800`. Keep
+`< /dev/null`: without it, `opencode run` waits for end of input and can stall
+before creating the session. Do not pass `--auto`: it would approve requests that
+the user's OpenCode permissions leave to `ask`. Wait for Claude Code's completion
+notice; do not poll or sleep.
+
+If Claude Code denies the output redirections (for example into an artifact
+directory outside the project), run the same command without the output
+redirections, keeping `< /dev/null`. When it completes, read the background task's
+output and save the reply text to `round<N>-reply.md` with the Write tool. The
+auditor session's export, below, remains the recovery source.
 
 ### Reading a round
 
 Read `round<N>-reply.md` with the Read tool. The round is delivered when the
-command exited 0 and the reply contains an `## Assessment` section; lines before
-that section are normal. Otherwise Read `round<N>.log` and treat the round as
-undelivered. Exit status 124 (`timeout`) or 142 (`perl`'s alarm) means the
-30-minute limit expired, most likely a stalled client or service (for example stdin
-not closed) or a very long auditor turn: check delivery as below, report a tool failure,
-and ask the human.
+command exited 0 and the reply is not empty; lines before its `## Assessment`
+section are normal. After a non-zero exit or an empty reply, Read `round<N>.log`
+and treat the round as undelivered. Exit status 124 (`timeout`) or 142 (`perl`'s
+alarm) means the 30-minute limit expired, most likely a stalled client or service
+(for example stdin not redirected) or a very long auditor turn: check delivery as
+below, report a tool failure, and ask the human.
+
+A reply that otherwise answers the assignment but lacks its `## Assessment`
+heading is a format problem, not non-delivery: in the next round, ask the auditor
+to restate its reply in the assignment's reply format; that follow-up counts as a
+round.
 
 ### Unknown delivery
 
@@ -89,6 +101,9 @@ work files and the OpenCode session are evidence for re-establishing them.
 ### Permissions
 
 Claude Code's permission prompts for these commands remain the user's; nothing is
-pre-authorized. A permission that the non-interactive run cannot ask about is auto-rejected and the
-auditor continues; the assignment already requires it to state any input it could
-not examine, so weigh that statement in the reply.
+pre-authorized. A permission that the non-interactive run cannot ask about is
+auto-rejected and the auditor continues; the assignment already requires it to
+state any input it could not examine, so weigh that statement in the reply.
+Auto-rejection blocks only that tool call, not the auditor: its shell can still
+read the same file, so keeping credentials out of review rests on the assignment's
+instruction alone.

@@ -121,7 +121,14 @@ optional and must resolve to that external directory if used.
   dispatches in the background and waits for the completion notice.
 - A non-interactive `opencode run` auto-rejects an OpenCode `ask` permission (stderr
   "auto-rejecting"); the tool call fails and the model continues, so `ask` needs no
-  user configuration. An apparent hang on one is the stdin stall above.
+  user configuration. An apparent hang on one is the stdin stall above. Rejection
+  blocks only that tool call: a live probe's auditor read the rejected file through
+  its shell, so keeping credentials out of review stays an instruction.
+- Claude Code permission rules prompt for or block command substitution and output
+  redirections, especially into an artifact directory outside the project. The
+  dispatch therefore attaches the round prompt with `opencode run -f` (which reads
+  files outside the project) instead of substituting it, and the reference gives a
+  fallback for denied redirections: the writer saves the reply with its Write tool.
 
 ## Native verification
 

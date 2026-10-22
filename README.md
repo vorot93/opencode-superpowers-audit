@@ -63,9 +63,18 @@ match the [Configuration](#configuration) table. Run
 - The Superpowers plugin, for the automatic stages.
 - Unattended auditor runs auto-reject any OpenCode permission that would ask
   (including `explore`'s built-in ask before reading `*.env` files); the auditor
-  reports what it could not read.
+  reports what it could not read. Rejection blocks only that tool call: the
+  auditor's shell can still read the same file, so keeping credentials out of
+  review is an instruction to the auditor, not a guarantee.
 - Each round runs under a 30-minute limit. On macOS, which ships `perl` but not
   `timeout`, the writer uses `perl` for it.
+- The writer runs these commands with the Bash tool, under your Claude Code
+  permission rules; approve them when asked or allow them in your settings, as
+  the plugin pre-authorizes nothing: `opencode models`,
+  `opencode session list --format json`, `mkdir` for the audit work directory,
+  `timeout 30m opencode run …` (or `perl -e … opencode run …`) with its output
+  redirected into that directory, and `opencode session export`. If you deny the
+  redirection, the writer saves each reply itself.
 - The writer's `reviewers` key is `anthropic/<base model id>`, with gateway and
   context-window forms such as Bedrock `us.anthropic.…-v1:0`, Vertex `@<date>`, and
   `[1m]` stripped, to match OpenCode's `anthropic/<model>` keys. If your writer IDs
