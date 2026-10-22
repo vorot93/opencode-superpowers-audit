@@ -4,7 +4,7 @@ import type { Plugin, Skill } from '@opencode/plugin';
 import { createAuditCommand } from './command.js';
 import { integrateSuperpowers } from './integration.js';
 import { parseOptions } from './options.js';
-import { AUDIT_SKILL_ID, renderAuditSkill } from './skill.js';
+import { AUDIT_SKILL_ID, parseSkillFile, renderAuditSkill } from './skill.js';
 
 const skillURL = new URL('../skills/superpowers-audit/SKILL.md', import.meta.url);
 
@@ -12,11 +12,12 @@ export default {
   id: 'opencode-superpowers-audit',
   async setup(ctx) {
     const options = parseOptions(ctx.options);
-    const body = readFileSync(skillURL, 'utf8');
+    const { name, description, body } = parseSkillFile(readFileSync(skillURL, 'utf8'));
+    if (name !== AUDIT_SKILL_ID) throw new Error(`Shared skill name must be ${AUDIT_SKILL_ID}, found ${name}`);
     const metadata = {
       id: AUDIT_SKILL_ID as Skill.Info['id'],
       name: 'Superpowers Audit' as Skill.Info['name'],
-      description: 'Use after spec/plan self-review or for a requested document audit.',
+      description,
       path: fileURLToPath(skillURL) as Skill.Info['path'],
     };
     await ctx.skill.transform(editor => {

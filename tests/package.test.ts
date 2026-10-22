@@ -3,7 +3,7 @@ import { cp, mkdir, mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { expected, fixture, skillIDs } from './support/fixtures.js';
+import { expected, fixture, sharedSkill, skillIDs } from './support/fixtures.js';
 import { pluginContext, registry } from './support/registry.js';
 
 const root = new URL('../', import.meta.url);
@@ -59,6 +59,7 @@ test('a source-only tarball loads with production dependencies and registers the
   await plugin.setup(pluginContext(host, { prompt: async () => { throw new Error('Unexpected prompt'); } }).ctx);
   expect(host.commands.has('audit')).toBe(true);
   expect(host.skills.get('superpowers-audit')?.content).toContain('brainstorming: integrated');
+  expect(host.skills.get('superpowers-audit')?.description).toBe((await sharedSkill()).description);
   for (const id of skillIDs) expect(host.skills.get(id)?.content).toBe(expected(id));
   expect(await readFile(new URL('skills/superpowers-audit/SKILL.md', packed), 'utf8'))
     .toBe(await readFile(new URL('skills/superpowers-audit/SKILL.md', root), 'utf8'));

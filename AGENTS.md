@@ -53,7 +53,9 @@ optional and must resolve to that external directory if used.
 
 - Use native tools and public OpenCode v2 documentation at
   `https://opencode.ai/v2/docs/` for host contracts.
-- Keep the shared skill a plain Markdown body; native registration owns metadata.
+- The shared skill's YAML frontmatter is the single metadata source: Claude Code reads it
+  natively, and OpenCode registration strips it and takes `description` from it. Rendered
+  bodies must never include frontmatter.
   Do not duplicate its templates in the command or adapters, or trim supplied body
   bytes while adjusting renderer separators.
 - Author expected transformed bodies independently of the adapter. Review complete

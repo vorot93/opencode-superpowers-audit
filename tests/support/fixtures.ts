@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import type { SupportedSkill } from '../../src/skill.js';
+import { readFile } from 'node:fs/promises';
+import { parseSkillFile, type SkillFile, type SupportedSkill } from '../../src/skill.js';
 
 export const skillIDs = ['brainstorming', 'writing-plans'] as const;
 
@@ -24,4 +25,14 @@ export function mutateSentence(id: SupportedSkill, body: string): string {
   assert(first >= 0 && body.indexOf(from, first + from.length) < 0,
     `${id}: mutation anchor must occur exactly once`);
   return body.replace(from, to);
+}
+
+const sharedSkillURL = new URL('../../skills/superpowers-audit/SKILL.md', import.meta.url);
+
+export async function sharedSkill(): Promise<SkillFile> {
+  return parseSkillFile(await readFile(sharedSkillURL, 'utf8'));
+}
+
+export async function sharedBody(): Promise<string> {
+  return (await sharedSkill()).body;
 }

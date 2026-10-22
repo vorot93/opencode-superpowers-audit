@@ -1,3 +1,8 @@
+---
+name: superpowers-audit
+description: Use after spec/plan self-review or for a requested document audit.
+user-invocable: false
+---
 # Superpowers Audit
 
 Run this workflow in the existing writer session for a written specification or

@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
-import { readFile } from 'node:fs/promises';
 import { parseOptions } from '../src/options.js';
-import { renderAuditSkill } from '../src/skill.js';
+import { parseSkillFile, renderAuditSkill } from '../src/skill.js';
+import { sharedBody } from './support/fixtures.js';
 
 test('configuration stays data and the shared body remains intact', () => {
   const body = '# Audit workflow\nNative instructions here.\n';
@@ -83,7 +83,7 @@ for (const [name, reviewers] of [
   ['same family through another gateway', { 'vendor/writer-family': 'gateway/writer-family#high' }],
 ] as const) {
   test(`renders both independence gates despite a user mapping with ${name}`, async () => {
-    const body = await readFile(new URL('../skills/superpowers-audit/SKILL.md', import.meta.url), 'utf8');
+    const body = await sharedBody();
     const text = renderAuditSkill(body, parseOptions({ reviewers }), []);
     expect(text).toContain('The auditor must use both a different provider and a different model family/class\nfrom every known drafting contributor and the current discussing writer.');
     expect(text).toContain('Routing the same underlying vendor/family through another gateway does not establish\nindependence.');
@@ -97,7 +97,7 @@ for (const [name, reviewers] of [
 }
 
 test('shared intake accepts confirmed conversational inputs and discloses actual drafting work', async () => {
-  const body = await readFile(new URL('../skills/superpowers-audit/SKILL.md', import.meta.url), 'utf8');
+  const body = await sharedBody();
   const text = renderAuditSkill(body, parseOptions({}), []);
   expect(text).toContain('confirmed conversational intent, decisions, and human answers');
   expect(text).toContain('a separate brief file is not required.');
@@ -117,10 +117,27 @@ for (const [name, input] of [
   }],
 ] as const) {
   test(`renders the complete shared skill with ${name} settings`, async () => {
-    const body = await readFile(new URL('../skills/superpowers-audit/SKILL.md', import.meta.url), 'utf8');
+    const body = await sharedBody();
     expect(renderAuditSkill(body, parseOptions(input), [
       { id: 'brainstorming', status: 'integrated' },
       { id: 'writing-plans', status: 'unavailable', reason: 'Source skill missing' },
     ])).toMatchSnapshot();
   });
 }
+
+test('parses frontmatter metadata and returns the exact remaining body', () => {
+  const metadata = 'name: superpowers-audit\ndescription: Use x.\nuser-invocable: false';
+  expect(parseSkillFile(`---\n${metadata}\n---\n# Body\n`))
+    .toEqual({ name: 'superpowers-audit', description: 'Use x.', body: '# Body\n' });
+  expect(parseSkillFile(`---\r\n${metadata.replaceAll('\n', '\r\n')}\r\n---\r\n# Body\r\n`))
+    .toEqual({ name: 'superpowers-audit', description: 'Use x.', body: '# Body\r\n' });
+});
+
+test('rejects a skill file without frontmatter, name, or description', () => {
+  for (const text of [
+    '# Body',
+    '---\nname: superpowers-audit\n---\n# Body\n',
+    '---\ndescription: Use x.\n---\n# Body\n',
+    '---\nname: 7\ndescription: Use x.\n---\n# Body\n',
+  ]) expect(() => parseSkillFile(text)).toThrow();
+});

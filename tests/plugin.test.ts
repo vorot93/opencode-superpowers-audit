@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { CommandInvocation } from '@opencode/plugin/promise/command';
 import plugin from '../src/index.js';
-import { expected, fixture, mutateSentence, skillIDs } from './support/fixtures.js';
+import { expected, fixture, mutateSentence, sharedSkill, skillIDs } from './support/fixtures.js';
 import { pluginContext, registry, skillInfo, sourceSkills } from './support/registry.js';
 import { promptRecorder } from './support/session.js';
 
@@ -40,15 +40,17 @@ async function assertManual({ host, prompt }: Awaited<ReturnType<typeof loaded>>
 }
 
 test('registers golden skills and one native command using only transforms and prompt', async () => {
+  const shared = await sharedSkill();
   const result = await loaded();
   assertGolden(result.host);
   const audit = result.host.skills.get(auditID)!;
   const skillURL = new URL('../skills/superpowers-audit/SKILL.md', import.meta.url);
   expect(audit).toMatchObject({
     id: auditID, name: 'Superpowers Audit', path: fileURLToPath(skillURL),
-    description: 'Use after spec/plan self-review or for a requested document audit.',
+    description: shared.description,
   });
-  expect(audit.content.startsWith(fs.readFileSync(skillURL, 'utf8'))).toBe(true);
+  expect(audit.content.startsWith(shared.body)).toBe(true);
+  expect(audit.content).not.toContain('user-invocable');
   expect(audit.content).toContain('brainstorming: integrated');
   expect(audit.content).toContain('writing-plans: integrated');
   expect(audit.content).toContain('not a per-agent permission verdict');
