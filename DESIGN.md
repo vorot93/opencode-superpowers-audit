@@ -91,6 +91,20 @@ Independently authored golden bodies catch errors in both edit selection and the
 resulting workflow. Full upstream bodies stay in attributed test fixtures; runtime
 code carries only hashes and edit excerpts.
 
+Claude Code deliberately skips the body check. It cannot rewrite another plugin's
+skill, so [`hooks/audit-context`](hooks/audit-context) adds an amendment from
+[`integration/claude-code/`](integration/claude-code) beside the untouched upstream
+body when either skill loads or is typed. Nothing is spliced, so an upstream change
+cannot be silently corrupted; at worst the amendment's "supersedes" statements no
+longer match the steps they name. The hook sees only the qualified skill name, never
+the body or its path, so a check would cost an extra writer step on every load. The
+risk is accepted: the amendments are written against Superpowers 7.0.0 and must be
+reviewed on each Superpowers release. Each amendment is framed as this plugin's
+workflow amendment to the just-loaded skill, because Claude Code ignores added
+context that reads like an injection, and it points to the shared skill for every
+audit rule. A stage-parity test holds the amendments and the OpenCode goldens to
+the same stage strings, so the hosts cannot drift silently.
+
 Each registry replay computes status from its current sources. An optional
 adaptation failure is isolated to that skill, while shared-asset and core
 registration failures remain visible to OpenCode. This keeps manual auditing

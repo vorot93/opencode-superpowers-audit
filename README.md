@@ -149,6 +149,13 @@ unavailable** notice; missing skills stay absent. Check plugin order and the sta
 in the shared audit skill when integration is unavailable. Installed Superpowers
 files are never modified.
 
+In Claude Code, the audit stages are added beside the upstream skill rather than
+spliced into it: when `superpowers:brainstorming` or `superpowers:writing-plans`
+loads through the Skill tool or is typed as a slash command, the plugin adds an
+amendment that names the upstream steps it supersedes. There is no body check, so
+the stages are added for any Superpowers version, but the amendments are written
+against Superpowers 7.0.0 and may misdescribe the steps of a later release.
+
 Manual `/audit` remains usable independently of automatic integration when its
 command and shared skill are loaded and permitted. Registry integration status is
 separate from native permission denials.

@@ -26,7 +26,7 @@ optional and must resolve to that external directory if used.
 - `bun run test:claude` (`claude plugin validate .`) is a separate check that needs
   the `claude` CLI; it may warn about a missing icon. The npm `files` list names the
   OpenCode skill assets individually so Claude Code-only files (`skills/audit`,
-  `references/claude-code.md`, `hooks/`) stay out of the npm package.
+  `references/claude-code.md`, `hooks/`, `integration/`) stay out of the npm package.
 - Use strict NodeNext TypeScript and type-only host imports. Bun resolves the
   `.js` imports in source/tests to TypeScript; package checks must also exercise
   that resolution outside the checkout, with only production dependencies.
@@ -75,6 +75,11 @@ optional and must resolve to that external directory if used.
 - Check replay and disposal as well as initial registration. Native `editor.add`
   replaces an existing skill ID, including across transforms; the registry double
   models ordered replay and host-owned disposal, not auditor execution.
+- Change a stage in both hosts together: the OpenCode edit pairs in
+  `src/superpowers.ts` and the Claude Code amendment in `integration/claude-code/`.
+  `tests/stage-parity.test.ts` holds both to the same stage strings. Review each
+  amendment as instructions beside the upstream skill: its "supersedes" quotes must
+  name real upstream steps, so recheck them on every Superpowers release.
 
 ## Claude Code host traps
 
@@ -84,6 +89,8 @@ optional and must resolve to that external directory if used.
   (`superpowers:writing-plans`, `superpowers-audit:superpowers-audit`). A typed slash
   command fires UserPromptExpansion instead, never PostToolUse, with `command_name`
   qualified even when typed bare. SessionStart input carries `source`.
+  The hook reads fields by key path (`tool_input.skill`), never by bare key name: other
+  objects in the input, such as `tool_response`, can carry a key of the same name.
 - Bare `/audit` resolves only for the skill form (`skills/audit/SKILL.md` with
   `disable-model-invocation: true`), not a legacy `commands/audit.md`. Its body must
   name `superpowers-audit:superpowers-audit`; "load the superpowers-audit skill" made

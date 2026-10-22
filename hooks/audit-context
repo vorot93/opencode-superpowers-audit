@@ -14,9 +14,46 @@ trap 'exit 0' EXIT
 LC_ALL=C
 export LC_ALL
 
-# field KEY: the string value of "KEY" in the hook input (its last occurrence).
+# field PATH: the string value at PATH, object keys joined by dots (such as
+# tool_input.skill), in the hook input, with escapes left as written. It tracks
+# strings and nesting, so the same key inside a string, an array, or another
+# object (a tool_response, say) never matches. Splitting on quotes keeps the
+# scan linear; a piece ending in an odd run of backslashes ends at an escaped
+# quote, so the string continues.
 field() {
-  printf '%s\n' "$input" | sed -n "s/.*\"$1\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p"
+  printf '%s\n' "$input" | awk -v path="$1" '
+    { json = json " " $0 }
+    END {
+      count = split(json, piece, "\"")
+      depth = 0; inside = 0
+      for (p = 1; p <= count; p++) {
+        if (inside) {
+          text = text piece[p]
+          if (piece[p] ~ /(^|[^\\])(\\\\)*\\$/) { text = text "\""; continue }
+          inside = 0
+          if (container[depth] == "{" && (previous == "{" || previous == ",")) {
+            key[depth] = text
+            previous = "key"
+            continue
+          }
+          if (container[depth] == "{" && previous == ":") {
+            at = key[1]
+            for (d = 2; d <= depth; d++) at = at "." key[d]
+            if (at == path) { print text; exit }
+          }
+          previous = "value"
+          continue
+        }
+        for (i = 1; i <= length(piece[p]); i++) {
+          c = substr(piece[p], i, 1)
+          if (c == "{" || c == "[") { container[++depth] = c; key[depth] = ""; previous = c }
+          else if (c == "}" || c == "]") { depth--; previous = "value" }
+          else if (c == ":" || c == ",") previous = c
+          else if (c !~ /[ \t\r]/) previous = "value"
+        }
+        inside = 1; text = ""
+      }
+    }'
 }
 
 # escape(s): s as the contents of a JSON string, as JSON.stringify writes it.
@@ -99,12 +136,12 @@ configuration() {
 }
 
 [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] || exit 0
-input=$(tr '\r\n' '  ')
+input=$(cat)
 event=$(field hook_event_name)
 
 # Each event names its subject differently; a route is one arm below.
 case $event in
-  PostToolUse) subject=$(field skill) ;;
+  PostToolUse) subject=$(field tool_input.skill) ;;
   UserPromptExpansion) subject=$(field command_name) ;;
   SessionStart) subject=$(field source) ;;
   *) exit 0 ;;
@@ -115,5 +152,13 @@ case $event:$subject in
     reference=$CLAUDE_PLUGIN_ROOT/skills/superpowers-audit/references/claude-code.md
     [ -r "$reference" ] || exit 0
     { cat "$reference"; printf '\n'; configuration; } | emit "$event"
+    ;;
+  # Superpowers authoring skills, loaded by the Skill tool or typed: the stages
+  # this plugin adds beside the unchanged upstream body.
+  PostToolUse:superpowers:brainstorming | UserPromptExpansion:superpowers:brainstorming | \
+  PostToolUse:superpowers:writing-plans | UserPromptExpansion:superpowers:writing-plans)
+    amendment=$CLAUDE_PLUGIN_ROOT/integration/claude-code/${subject#superpowers:}.md
+    [ -r "$amendment" ] || exit 0
+    emit "$event" < "$amendment"
     ;;
 esac

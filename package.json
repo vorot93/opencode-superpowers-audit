@@ -6,7 +6,7 @@
   "main": "./index.js",
   "exports": "./index.js",
   "scripts": {
-    "test": "bun test tests/options.test.ts tests/skill.test.ts tests/superpowers.test.ts tests/integration.test.ts tests/command.test.ts tests/plugin.test.ts tests/native-check.test.ts tests/claude-plugin.test.ts tests/hook.test.ts",
+    "test": "bun test tests/options.test.ts tests/skill.test.ts tests/superpowers.test.ts tests/integration.test.ts tests/command.test.ts tests/plugin.test.ts tests/native-check.test.ts tests/claude-plugin.test.ts tests/hook.test.ts tests/stage-parity.test.ts",
     "test:package": "bun test tests/package.test.ts",
     "test:claude": "claude plugin validate .",
     "typecheck": "tsc --noEmit"

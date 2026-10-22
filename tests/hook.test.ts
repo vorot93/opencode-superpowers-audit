@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { parseOptions } from '../src/options.js';
 import { renderConfiguration } from '../src/skill.js';
 import { configVectors } from './support/config-vectors.js';
+import { skillIDs } from './support/fixtures.js';
 import { hookContext, repoRoot, runHook } from './support/hook.js';
 
 const read = (path: string) => readFile(join(repoRoot, path), 'utf8');
@@ -16,6 +17,12 @@ const auditLoad = {
   tool_name: 'Skill',
   tool_input: { skill: 'superpowers-audit:superpowers-audit' },
 };
+
+const skillLoad = (skill: string) => JSON.stringify({ ...auditLoad, tool_input: { skill } });
+const typedCommand = (command: string) => JSON.stringify({
+  hook_event_name: 'UserPromptExpansion', expansion_type: 'slash_command', command_name: command, command_source: 'plugin',
+});
+const amendment = (id: string) => read(`integration/claude-code/${id}.md`);
 
 async function auditContext(env: Record<string, string> = {}, input = JSON.stringify(auditLoad)) {
   const { exitCode, stdout } = await runHook(input, env);
@@ -68,6 +75,52 @@ test('routes pretty-printed input', async () => {
   expect(await auditContext({}, JSON.stringify(auditLoad, null, 2))).toBe(await auditContext());
 });
 
+test('authoring skills receive their amendment on load and on typed commands', async () => {
+  for (const id of skillIDs) {
+    for (const [event, input] of [
+      ['PostToolUse', skillLoad(`superpowers:${id}`)],
+      ['UserPromptExpansion', typedCommand(`superpowers:${id}`)],
+    ] as const) {
+      const { exitCode, stdout } = await runHook(input);
+      expect(exitCode).toBe(0);
+      expect(hookContext(stdout)).toEqual({ event, context: await amendment(id) });
+    }
+  }
+});
+
+test('ignores look-alike names', async () => {
+  for (const name of ['superpowers:brainstorming-extra', 'my-superpowers:writing-plans', 'superpowers-audit:audit', 'brainstorming']) {
+    for (const input of [skillLoad(name), typedCommand(name)]) {
+      expect(await runHook(input)).toEqual({ exitCode: 0, stdout: '' });
+    }
+  }
+});
+
+test('reads the loaded skill from the tool input only', async () => {
+  // A later "skill" key elsewhere in the input must not replace the loaded one.
+  const withResponse = (skill: string) =>
+    JSON.stringify({ hook_event_name: 'PostToolUse', tool_input: { skill }, tool_response: { skill: 'x' } });
+  expect(await auditContext({}, withResponse('superpowers-audit:superpowers-audit'))).toBe(await auditContext());
+  expect(hookContext((await runHook(withResponse('superpowers:writing-plans'))).stdout))
+    .toEqual({ event: 'PostToolUse', context: await amendment('writing-plans') });
+
+  // Strings that look like keys, braces, and key order do not confuse the scan.
+  const tricky = '{"tool_input": {"args": "a \\"skill\\": \\"x\\" } \\\\", "skill": "superpowers:brainstorming"},'
+    + ' "hook_event_name": "PostToolUse"}';
+  expect(JSON.parse(tricky).tool_input.skill).toBe('superpowers:brainstorming');
+  expect(hookContext((await runHook(tricky)).stdout))
+    .toEqual({ event: 'PostToolUse', context: await amendment('brainstorming') });
+
+  for (const input of [
+    { hook_event_name: 'PostToolUse', tool_input: {}, tool_response: { skill: 'superpowers:brainstorming' } },
+    { hook_event_name: 'PostToolUse', tool_input: { nested: { skill: 'superpowers:brainstorming' } } },
+    { hook_event_name: 'PostToolUse', skill: 'superpowers:brainstorming' },
+    { tool_input: { hook_event_name: 'PostToolUse', skill: 'superpowers:brainstorming' } },
+  ]) {
+    expect(await runHook(JSON.stringify(input))).toEqual({ exitCode: 0, stdout: '' });
+  }
+});
+
 test('fails open', async () => {
   const empty = await mkdtemp(join(tmpdir(), 'audit-hook-'));
   try {
@@ -75,6 +128,8 @@ test('fails open', async () => {
       ['', {}],
       [JSON.stringify(auditLoad), { CLAUDE_PLUGIN_ROOT: undefined }],
       [JSON.stringify(auditLoad), { CLAUDE_PLUGIN_ROOT: empty }],
+      [skillLoad('superpowers:brainstorming'), { CLAUDE_PLUGIN_ROOT: empty }],
+      [typedCommand('superpowers:writing-plans'), { CLAUDE_PLUGIN_ROOT: empty }],
       ['{"hook_event_name": "PostToolUse", "tool_input": {', {}],
       [JSON.stringify({ hook_event_name: 'UserPromptExpansion', command_name: 'other:thing' }), {}],
       [JSON.stringify({ ...auditLoad, tool_input: { skill: 'other:thing' } }), {}],
@@ -93,6 +148,7 @@ test('stays under the context limit', async () => {
   for (const vector of configVectors.filter(v => v.env !== undefined)) {
     longest = Math.max(longest, (await auditContext(vector.env)).length);
   }
+  for (const id of skillIDs) longest = Math.max(longest, (await amendment(id)).length);
   expect(longest).toBeLessThan(10_000);
 });
 
