@@ -1,0 +1,119 @@
+#!/bin/sh
+# Claude Code hook: adds superpowers-audit context when a routed skill loads.
+#
+# Claude Code runs this for every Skill load, typed slash command, and
+# compaction, so it must never block one: every path exits 0, and anything
+# unexpected (no plugin root, a missing file, unrecognized input) emits nothing.
+# Claude Code guarantees no runtime beyond POSIX sh and stock utilities.
+#
+# Content and option values stay in pipes and awk, never in shell variables:
+# dash 0.5.13 in the C locale corrupts non-ASCII bytes on variable assignment.
+# The hook input is held in one only to extract its ASCII routing fields.
+
+trap 'exit 0' EXIT
+LC_ALL=C
+export LC_ALL
+
+# field KEY: the string value of "KEY" in the hook input (its last occurrence).
+field() {
+  printf '%s\n' "$input" | sed -n "s/.*\"$1\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p"
+}
+
+# escape(s): s as the contents of a JSON string, as JSON.stringify writes it.
+escape_function='
+  function escape(s,   out, i, c) {
+    if (!("\001" in control)) for (i = 1; i < 32; i++) control[sprintf("%c", i)] = sprintf("\\u%04x", i)
+    out = ""
+    for (i = 1; i <= length(s); i++) {
+      c = substr(s, i, 1)
+      if (c == "\\" || c == "\"") out = out "\\" c
+      else if (c == "\n") out = out "\\n"
+      else if (c == "\t") out = out "\\t"
+      else if (c == "\r") out = out "\\r"
+      else if (c in control) out = out control[c]
+      else out = out c
+    }
+    return out
+  }'
+
+# emit EVENT: standard input, exactly, as EVENT's additional context. The
+# appended newline terminates the last line, so a final newline survives.
+emit() {
+  { cat; printf '\n'; } | awk -v event="$1" "$escape_function"'
+    { context = context (NR > 1 ? "\\n" : "") escape($0) }
+    END {
+      if (context != "")
+        printf "{\"hookSpecificOutput\":{\"hookEventName\":\"%s\",\"additionalContext\":\"%s\"}}\n", event, context
+    }'
+}
+
+# configuration: the block renderConfiguration (src/skill.ts) renders for the
+# same options. Claude Code exports only the options the user set and joins the
+# reviewers list with commas; the rules mirror src/options.ts and are tested
+# against the same vectors. An empty reviewers list has no entries.
+configuration() {
+  awk "$escape_function"'
+    function fail(message) { errors = errors (errors == "" ? "" : "\n") message }
+    BEGIN {
+      writer_pattern = "^[^[:space:]/#,]+/[^[:space:]#,]+$"
+      reviewer_pattern = "^[^[:space:]/#,]+/[^[:space:]#,]+(#[^[:space:]#,]+)?$"
+      list = ENVIRON["CLAUDE_PLUGIN_OPTION_REVIEWERS"]
+      count = (list == "") ? 0 : split(list, entries, ",")
+      for (i = 1; i <= count; i++) {
+        separator = index(entries[i], "=")
+        writer = substr(entries[i], 1, separator - 1)
+        reviewer = substr(entries[i], separator + 1)
+        if (separator == 0 || writer !~ writer_pattern || reviewer !~ reviewer_pattern)
+          fail("reviewers: entry \"" entries[i] "\" is not writer-provider/model=reviewer-provider/model[#variant]")
+        else if (writer in seen)
+          fail("reviewers: writer \"" writer "\" is mapped more than once")
+        else {
+          seen[writer] = 1
+          pairs = pairs (pairs == "" ? "" : ",\n") "        \"" escape(writer) "\": \"" escape(reviewer) "\""
+        }
+      }
+
+      rounds = "5"
+      if ("CLAUDE_PLUGIN_OPTION_MAXROUNDS" in ENVIRON) rounds = ENVIRON["CLAUDE_PLUGIN_OPTION_MAXROUNDS"]
+      if (rounds !~ /^[1-9][0-9]*$/) fail("maxRounds: \"" rounds "\" is not a positive integer")
+
+      if ("CLAUDE_PLUGIN_OPTION_ARTIFACTDIRECTORY" in ENVIRON) {
+        directory = ENVIRON["CLAUDE_PLUGIN_OPTION_ARTIFACTDIRECTORY"]
+        sub(/^[[:space:]]+/, "", directory)
+        sub(/[[:space:]]+$/, "", directory)
+        if (directory == "") fail("artifactDirectory: must not be blank")
+      }
+
+      if (errors != "") {
+        printf "## Configuration error\n\nRequest correction from the human before auditor dispatch. Do not use fallback defaults.\n\n"
+        printf "    {\n      \"message\": \"%s\"\n    }", escape(errors)
+      } else {
+        printf "## Configuration\n\n    {\n"
+        if (pairs == "") printf "      \"reviewers\": {},\n"
+        else printf "      \"reviewers\": {\n%s\n      },\n", pairs
+        printf "      \"maxRounds\": %s", rounds
+        if (directory != "") printf ",\n      \"artifactDirectory\": \"%s\"", escape(directory)
+        printf "\n    }"
+      }
+    }'
+}
+
+[ -n "${CLAUDE_PLUGIN_ROOT:-}" ] || exit 0
+input=$(tr '\r\n' '  ')
+event=$(field hook_event_name)
+
+# Each event names its subject differently; a route is one arm below.
+case $event in
+  PostToolUse) subject=$(field skill) ;;
+  UserPromptExpansion) subject=$(field command_name) ;;
+  SessionStart) subject=$(field source) ;;
+  *) exit 0 ;;
+esac
+
+case $event:$subject in
+  PostToolUse:superpowers-audit:superpowers-audit)
+    reference=$CLAUDE_PLUGIN_ROOT/skills/superpowers-audit/references/claude-code.md
+    [ -r "$reference" ] || exit 0
+    { cat "$reference"; printf '\n'; configuration; } | emit "$event"
+    ;;
+esac

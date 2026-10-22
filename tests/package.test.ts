@@ -78,7 +78,9 @@ test('packaged adapters produce the complete independently reviewed golden bodie
 
 test('the package excludes tests, generated output, and runtime host imports', async () => {
   const files = await readdir(packed);
-  for (const excluded of ['tests', 'dist', '.superpowers']) expect(files).not.toContain(excluded);
+  for (const excluded of ['tests', 'dist', '.superpowers', '.claude-plugin', 'hooks']) expect(files).not.toContain(excluded);
+  expect(await readdir(new URL('skills/', packed))).toEqual(['superpowers-audit']);
+  expect(await readdir(new URL('skills/superpowers-audit/references/', packed))).toEqual(['opencode.md']);
   const source = new URL('src/', packed);
   const transpiler = new Bun.Transpiler({ loader: 'ts' });
   for (const file of await readdir(source)) {

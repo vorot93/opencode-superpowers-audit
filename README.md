@@ -51,8 +51,37 @@ The same repository is a Claude Code plugin and a single-plugin marketplace:
 ```
 
 Configure reviewers, the round limit, and the artifact directory with
-`/plugin configure` (list options are not `/config` rows). Run
-`/audit path/to/spec-or-plan.md` as above.
+`/plugin configure` (list options are not `/config` rows). Each `reviewers` entry
+is `writer-provider/model=reviewer-provider/model[#variant]`; the other options
+match the [Configuration](#configuration) table. Run
+`/audit path/to/spec-or-plan.md` as described under [Usage](#usage).
+
+#### Claude Code prerequisites
+
+- The OpenCode CLI (`opencode`) with an authorized non-Anthropic provider: the
+  auditor runs as OpenCode's `explore` agent through `opencode run`.
+- The Superpowers plugin, for the automatic stages.
+- No action available to `explore` may resolve to `ask`, because a
+  non-interactive `opencode run` cannot answer it. OpenCode's own `explore` policy
+  asks before reading `*.env` and `*.env.*`, so add this to your OpenCode
+  configuration (the plugin never writes it):
+
+  ```jsonc
+  "agents": { "explore": { "permissions": [
+    { "action": "read", "resource": "*.env", "effect": "deny" },
+    { "action": "read", "resource": "*.env.*", "effect": "deny" }
+  ] } }
+  ```
+
+  The deny avoids the hang; it is not a credential guarantee, because `explore`
+  keeps shell access. The assignment's instruction to keep credentials out of the
+  review remains the control.
+- Each round runs under a 30-minute limit. On macOS, which ships `perl` but not
+  `timeout`, the writer uses `perl` for it.
+- The writer's `reviewers` key is `anthropic/<base model id>`, with gateway and
+  context-window forms such as Bedrock `us.anthropic.…-v1:0`, Vertex `@<date>`, and
+  `[1m]` stripped, to match OpenCode's `anthropic/<model>` keys. If your writer IDs
+  normalize differently in the two hosts, add one `reviewers` entry per form.
 
 ## Usage
 

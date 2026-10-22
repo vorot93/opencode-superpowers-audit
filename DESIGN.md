@@ -4,8 +4,16 @@
 
 The plugin supplies a shared skill, a command, and Superpowers skill adaptations.
 The existing writer owns the conversation: it retains authoring context, evaluates
-findings, edits documents, consults the human, and publishes the report. OpenCode
-owns subagent execution, permissions, session continuation, and interruption.
+findings, edits documents, consults the human, and publishes the report. The hosts
+own everything else:
+
+- In OpenCode, OpenCode owns subagent execution, permissions, session continuation,
+  and interruption.
+- In Claude Code, Claude Code owns background execution, completion notices, and its
+  permission prompts; OpenCode owns the auditor session and its history (`-s`,
+  `session export`). The writer composes those native commands from the dispatch
+  reference. Round work files are report evidence, not state: delivery checks read
+  OpenCode's own session rather than a plugin-maintained record.
 
 This boundary deliberately excludes a custom audit runner, reconstructed history,
 response-delivery protocol, audit-state store, or extra filesystem/permission
@@ -28,10 +36,26 @@ prevents manual and automatic audits from diverging.
 The shared body is host-neutral: it names no OpenCode tool, agent, or context
 block. Each host appends its own dispatch reference
 ([`references/opencode.md`](skills/superpowers-audit/references/opencode.md) for
-OpenCode), which owns writer identification, the model catalog, and the auditor
+OpenCode, [`references/claude-code.md`](skills/superpowers-audit/references/claude-code.md)
+for Claude Code), which owns writer identification, the model catalog, and the auditor
 call mechanics, including the `explore` auditor agent. Because compaction can keep
 the body but drop appended context, the body tells the writer to reload the skill
 once and otherwise stop before dispatch.
+
+OpenCode's renderer appends the reference and configuration to the body. Claude Code
+cannot change a skill body, so [`hooks/audit-context`](hooks/audit-context) adds the
+same material as hook context when the Skill tool loads the shared skill.
+
+## Two validators, one vector set
+
+The configuration contract is validated twice: zod in [`src/options.ts`](src/options.ts)
+for OpenCode, and the hook's POSIX shell and awk for Claude Code, where no JavaScript
+runtime is guaranteed. Both render the same `## Configuration` block, or an error
+block that requests correction instead of falling back to defaults. One vector file,
+[`tests/support/config-vectors.ts`](tests/support/config-vectors.ts), drives both
+test suites, and valid vectors must render byte-identical blocks. Claude Code joins
+list options with commas, so reviewer entries exclude commas in both hosts. Error
+wording is host-specific; the shared contract is the block shape and the named key.
 
 The renderer preserves the supplied body byte-for-byte and appends the dispatch
 reference, validated configuration, and integration status. Configuration JSON is readable data, not a

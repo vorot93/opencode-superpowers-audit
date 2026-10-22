@@ -6,12 +6,12 @@
   "main": "./index.js",
   "exports": "./index.js",
   "scripts": {
-    "test": "bun test tests/options.test.ts tests/skill.test.ts tests/superpowers.test.ts tests/integration.test.ts tests/command.test.ts tests/plugin.test.ts tests/native-check.test.ts tests/claude-plugin.test.ts",
+    "test": "bun test tests/options.test.ts tests/skill.test.ts tests/superpowers.test.ts tests/integration.test.ts tests/command.test.ts tests/plugin.test.ts tests/native-check.test.ts tests/claude-plugin.test.ts tests/hook.test.ts",
     "test:package": "bun test tests/package.test.ts",
     "test:claude": "claude plugin validate .",
     "typecheck": "tsc --noEmit"
   },
-  "files": ["index.js", "src", "skills/superpowers-audit", "README.md", "DESIGN.md", "LICENSE", "NOTICE"],
+  "files": ["index.js", "src", "skills/superpowers-audit/SKILL.md", "skills/superpowers-audit/references/opencode.md", "README.md", "DESIGN.md", "LICENSE", "NOTICE"],
   "dependencies": {
     "yaml": "^2.9.1",
     "zod": "^4.6.7"

@@ -52,8 +52,10 @@ test('no skill pre-authorizes tools', async () => {
 });
 
 test('the npm package excludes Claude Code files', () => {
-  for (const excluded of ['.claude-plugin', 'hooks', 'integration', 'skills']) {
-    expect(pkg.files).not.toContain(excluded);
+  const claudeOnly = ['.claude-plugin', 'hooks', 'integration', 'skills/audit', 'skills/superpowers-audit/references/claude-code.md'];
+  for (const entry of pkg.files as string[]) {
+    expect(claudeOnly.some(path => entry === path || entry.startsWith(`${path}/`) || path.startsWith(`${entry}/`))).toBe(false);
   }
-  expect(pkg.files).toContain('skills/superpowers-audit');
+  expect(pkg.files).toContain('skills/superpowers-audit/SKILL.md');
+  expect(pkg.files).toContain('skills/superpowers-audit/references/opencode.md');
 });

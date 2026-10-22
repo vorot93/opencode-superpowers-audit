@@ -24,8 +24,9 @@ optional and must resolve to that external directory if used.
   `bun add -d @opencode/plugin@latest typescript@latest @types/bun@latest @types/json-schema@latest`.
   `bun.lock`, `node_modules/`, and tarballs remain untracked.
 - `bun run test:claude` (`claude plugin validate .`) is a separate check that needs
-  the `claude` CLI; it may warn about a missing icon. `skills/audit` (the Claude Code
-  `/audit`) stays out of the npm package via the narrowed `files` entry.
+  the `claude` CLI; it may warn about a missing icon. The npm `files` list names the
+  OpenCode skill assets individually so Claude Code-only files (`skills/audit`,
+  `references/claude-code.md`, `hooks/`) stay out of the npm package.
 - Use strict NodeNext TypeScript and type-only host imports. Bun resolves the
   `.js` imports in source/tests to TypeScript; package checks must also exercise
   that resolution outside the checkout, with only production dependencies.
@@ -74,6 +75,45 @@ optional and must resolve to that external directory if used.
 - Check replay and disposal as well as initial registration. Native `editor.add`
   replaces an existing skill ID, including across transforms; the registry double
   models ordered replay and host-owned disposal, not auditor execution.
+
+## Claude Code host traps
+
+- Claude Code exposes no skill body or path to hooks and cannot rewrite another
+  plugin's skill, so this plugin adds context beside loads instead. A Skill-tool load
+  fires PostToolUse with a fully qualified `tool_input.skill`
+  (`superpowers:writing-plans`, `superpowers-audit:superpowers-audit`). A typed slash
+  command fires UserPromptExpansion instead, never PostToolUse, with `command_name`
+  qualified even when typed bare. SessionStart input carries `source`.
+- Bare `/audit` resolves only for the skill form (`skills/audit/SKILL.md` with
+  `disable-model-invocation: true`), not a legacy `commands/audit.md`. Its body must
+  name `superpowers-audit:superpowers-audit`; "load the superpowers-audit skill" made
+  the model load `superpowers-audit:audit` instead.
+- `userConfig` values reach hooks as `CLAUDE_PLUGIN_OPTION_<KEY uppercased>`: a
+  `multiple` list comma-joined, a number as its decimal string. Unset options are not
+  exported at all, even with a manifest `default`, so `hooks/audit-context` applies
+  defaults. For a `--plugin-dir` probe, pass options with
+  `--settings '{"pluginConfigs":{"superpowers-audit@inline":{"options":{…}}}}'`.
+- Claude Code reads only `hookSpecificOutput.additionalContext` with the firing
+  `hookEventName`, capped at 10,000 characters, and only from a `hooks.json` with a
+  top-level `hooks` wrapper. Frame added context as this plugin's workflow material:
+  text that reads like an injection is ignored. Quote `${CLAUDE_PLUGIN_ROOT}` in hook
+  commands; `${CLAUDE_PLUGIN_ROOT}` is not set in the writer's Bash tool calls.
+- The hook must exit 0 on every path: a failing UserPromptExpansion hook would break
+  every slash command. Keep it to POSIX `sh` and stock utilities, committed with mode
+  755. `/bin/sh` may be bash locally, so run `AUDIT_HOOK_SHELL=<dash or busybox sh>
+  bun test tests/hook.test.ts` after changing it. Keep content and option values in
+  pipes and awk: dash 0.5.13 in the C locale corrupts non-ASCII bytes on assignment.
+- `opencode run` waits for end of input on a non-terminal stdin, and Claude Code's
+  Bash stdin may never close, so a run without `< /dev/null` can stall before creating
+  its session. Redirect it in every shipped, test, and probe command.
+- `opencode run -s` creates a session for a new `ses`-prefixed ID and continues an
+  existing one; the default output format prints only the reply, not the session ID.
+  A round can exceed Claude Code's 10-minute foreground Bash limit, so the reference
+  dispatches in the background and waits for the completion notice.
+- A non-interactive `opencode run` cannot answer an OpenCode `ask` permission. The
+  probe that hung on one also had open stdin, so live verification with stdin closed
+  decides the failure mode; the README `agents.explore.permissions` prerequisite and
+  the 30-minute round limit stand either way.
 
 ## Native verification
 
