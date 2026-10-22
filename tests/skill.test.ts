@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { expect, test } from 'bun:test';
 import { parseOptions } from '../src/options.js';
-import { parseSkillFile, renderAuditSkill } from '../src/skill.js';
+import { parseSkillFile, renderAuditSkill, renderConfiguration } from '../src/skill.js';
 import { sharedBody } from './support/fixtures.js';
 
 const dispatch = '## Host dispatch: Test\nDispatch rules.\n';
@@ -174,4 +174,10 @@ test('rejects a skill file without frontmatter, name, or description', () => {
     '---\ndescription: Use x.\n---\n# Body\n',
     '---\nname: 7\ndescription: Use x.\n---\n# Body\n',
   ]) expect(() => parseSkillFile(text)).toThrow();
+});
+
+test('renders a configuration error block for invalid options', () => {
+  expect(renderConfiguration(parseOptions({ maxRounds: 0 }))).toStartWith(
+    '## Configuration error\n\nRequest correction from the human before auditor dispatch. Do not use fallback defaults.',
+  );
 });

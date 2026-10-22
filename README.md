@@ -90,7 +90,7 @@ replace them with your explicit choices resolved through `opencode.models`.
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `reviewers` | `{}` | User-selected reviewer candidates keyed by drafting `provider/model`, without its variant. Values accept an optional `#variant`; model IDs may contain `/`. Candidates must still satisfy independence and availability checks. |
+| `reviewers` | `{}` | User-selected reviewer candidates keyed by drafting `provider/model`, without its variant. Values accept an optional `#variant`; model IDs may contain `/`, but entries cannot contain commas. Candidates must still satisfy independence and availability checks. |
 | `maxRounds` | `5` | Positive integer counting the initial auditor call and every explicit follow-up, including clarifications. Native retries and reading existing replies do not add rounds. |
 | `artifactDirectory` | Project convention | Nonempty path for audit artifacts. Relative paths resolve from the writer's project root; reports go in `audits/` beneath it. When omitted, the writer uses the project's `.superpowers` link or stated convention, asking when unclear. |
 

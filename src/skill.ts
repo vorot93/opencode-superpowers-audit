@@ -16,15 +16,19 @@ function indentedJson(value: unknown): string {
   return JSON.stringify(value, null, 2).split('\n').map(line => '    ' + line).join('\n');
 }
 
+export function renderConfiguration(options: OptionsResult): string {
+  return options.ok
+    ? `## Configuration\n\n${indentedJson(options.value)}`
+    : `## Configuration error\n\nRequest correction from the human before auditor dispatch. Do not use fallback defaults.\n\n${indentedJson({ message: options.message })}`;
+}
+
 export function renderAuditSkill(
   body: string,
   dispatch: string,
   options: OptionsResult,
   integrations: readonly IntegrationStatus[],
 ): string {
-  const configuration = options.ok
-    ? `## Configuration\n\n${indentedJson(options.value)}`
-    : `## Configuration error\n\nRequest correction from the human before auditor dispatch. Do not use fallback defaults.\n\n${indentedJson({ message: options.message })}`;
+  const configuration = renderConfiguration(options);
   const statuses = integrations.map(({ id, status, reason }) =>
     `- ${id}: ${status}${reason === undefined ? '' : ` — ${JSON.stringify(reason)}`}`,
   ).join('\n');
